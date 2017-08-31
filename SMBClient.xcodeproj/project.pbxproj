@@ -11,19 +11,8 @@
 		C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */; };
 		C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BA21F5793B5008B96C4 /* SMBClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C36F2BCC1F579566008B96C4 /* NetBIOSNameService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */; };
-		C36F2BD41F57A0AB008B96C4 /* libdsm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BC61F57943D008B96C4 /* libdsm.a */; };
-		C36F2BD51F57A0AB008B96C4 /* libtasn1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BC71F57943D008B96C4 /* libtasn1.a */; };
-		C36F2BD61F57A0C5008B96C4 /* bdsm.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BBB1F57943D008B96C4 /* bdsm.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BD71F57A0C5008B96C4 /* libtasn1.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BBC1F57943D008B96C4 /* libtasn1.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BD81F57A0C5008B96C4 /* netbios_defs.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BBD1F57943D008B96C4 /* netbios_defs.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BD91F57A0C5008B96C4 /* netbios_ns.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BBE1F57943D008B96C4 /* netbios_ns.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDA1F57A0C5008B96C4 /* smb_defs.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BBF1F57943D008B96C4 /* smb_defs.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDB1F57A0C5008B96C4 /* smb_dir.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC01F57943D008B96C4 /* smb_dir.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDC1F57A0C5008B96C4 /* smb_file.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC11F57943D008B96C4 /* smb_file.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDD1F57A0C5008B96C4 /* smb_session.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC21F57943D008B96C4 /* smb_session.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDE1F57A0C5008B96C4 /* smb_share.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC31F57943D008B96C4 /* smb_share.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BDF1F57A0C5008B96C4 /* smb_stat.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC41F57943D008B96C4 /* smb_stat.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		C36F2BE01F57A0C5008B96C4 /* smb_types.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BC51F57943D008B96C4 /* smb_types.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		C36F2BE91F58839C008B96C4 /* libtasn1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BE71F58839C008B96C4 /* libtasn1.a */; };
+		C36F2BEA1F58839C008B96C4 /* libdsm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BE81F58839C008B96C4 /* libdsm.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,21 +32,11 @@
 		C36F2BA81F5793B5008B96C4 /* SMBClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SMBClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBClientTests.swift; sourceTree = "<group>"; };
 		C36F2BAF1F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C36F2BBB1F57943D008B96C4 /* bdsm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bdsm.h; sourceTree = "<group>"; };
-		C36F2BBC1F57943D008B96C4 /* libtasn1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libtasn1.h; sourceTree = "<group>"; };
-		C36F2BBD1F57943D008B96C4 /* netbios_defs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netbios_defs.h; sourceTree = "<group>"; };
-		C36F2BBE1F57943D008B96C4 /* netbios_ns.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netbios_ns.h; sourceTree = "<group>"; };
-		C36F2BBF1F57943D008B96C4 /* smb_defs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_defs.h; sourceTree = "<group>"; };
-		C36F2BC01F57943D008B96C4 /* smb_dir.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_dir.h; sourceTree = "<group>"; };
-		C36F2BC11F57943D008B96C4 /* smb_file.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_file.h; sourceTree = "<group>"; };
-		C36F2BC21F57943D008B96C4 /* smb_session.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_session.h; sourceTree = "<group>"; };
-		C36F2BC31F57943D008B96C4 /* smb_share.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_share.h; sourceTree = "<group>"; };
-		C36F2BC41F57943D008B96C4 /* smb_stat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_stat.h; sourceTree = "<group>"; };
-		C36F2BC51F57943D008B96C4 /* smb_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = smb_types.h; sourceTree = "<group>"; };
-		C36F2BC61F57943D008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdsm.a; sourceTree = "<group>"; };
-		C36F2BC71F57943D008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libtasn1.a; sourceTree = "<group>"; };
 		C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBIOSNameService.swift; sourceTree = "<group>"; };
-		C36F2BD21F579ED9008B96C4 /* module.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.map; sourceTree = "<group>"; };
+		C36F2BE31F58830F008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdsm.a; path = External/libdsm/libdsm.a; sourceTree = "<group>"; };
+		C36F2BE41F58830F008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = External/libdsm/libtasn1.a; sourceTree = "<group>"; };
+		C36F2BE71F58839C008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = libdsm/libtasn1.a; sourceTree = "<group>"; };
+		C36F2BE81F58839C008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdsm.a; path = libdsm/libdsm.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,8 +44,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C36F2BD41F57A0AB008B96C4 /* libdsm.a in Frameworks */,
-				C36F2BD51F57A0AB008B96C4 /* libtasn1.a in Frameworks */,
+				C36F2BE91F58839C008B96C4 /* libtasn1.a in Frameworks */,
+				C36F2BEA1F58839C008B96C4 /* libdsm.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,9 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				C36F2BCF1F579683008B96C4 /* Support Files */,
-				C36F2BB91F57943D008B96C4 /* libdsm */,
 				C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */,
-				C36F2BD21F579ED9008B96C4 /* module.map */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -118,34 +95,6 @@
 				C36F2BAF1F5793B5008B96C4 /* Info.plist */,
 			);
 			path = Tests;
-			sourceTree = "<group>";
-		};
-		C36F2BB91F57943D008B96C4 /* libdsm */ = {
-			isa = PBXGroup;
-			children = (
-				C36F2BBA1F57943D008B96C4 /* bdsm */,
-				C36F2BC61F57943D008B96C4 /* libdsm.a */,
-				C36F2BC71F57943D008B96C4 /* libtasn1.a */,
-			);
-			path = libdsm;
-			sourceTree = "<group>";
-		};
-		C36F2BBA1F57943D008B96C4 /* bdsm */ = {
-			isa = PBXGroup;
-			children = (
-				C36F2BBB1F57943D008B96C4 /* bdsm.h */,
-				C36F2BBC1F57943D008B96C4 /* libtasn1.h */,
-				C36F2BBD1F57943D008B96C4 /* netbios_defs.h */,
-				C36F2BBE1F57943D008B96C4 /* netbios_ns.h */,
-				C36F2BBF1F57943D008B96C4 /* smb_defs.h */,
-				C36F2BC01F57943D008B96C4 /* smb_dir.h */,
-				C36F2BC11F57943D008B96C4 /* smb_file.h */,
-				C36F2BC21F57943D008B96C4 /* smb_session.h */,
-				C36F2BC31F57943D008B96C4 /* smb_share.h */,
-				C36F2BC41F57943D008B96C4 /* smb_stat.h */,
-				C36F2BC51F57943D008B96C4 /* smb_types.h */,
-			);
-			path = bdsm;
 			sourceTree = "<group>";
 		};
 		C36F2BCF1F579683008B96C4 /* Support Files */ = {
@@ -160,6 +109,10 @@
 		C36F2BD31F57A0AB008B96C4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C36F2BE31F58830F008B96C4 /* libdsm.a */,
+				C36F2BE81F58839C008B96C4 /* libdsm.a */,
+				C36F2BE71F58839C008B96C4 /* libtasn1.a */,
+				C36F2BE41F58830F008B96C4 /* libtasn1.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -172,17 +125,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */,
-				C36F2BD61F57A0C5008B96C4 /* bdsm.h in Headers */,
-				C36F2BD71F57A0C5008B96C4 /* libtasn1.h in Headers */,
-				C36F2BD81F57A0C5008B96C4 /* netbios_defs.h in Headers */,
-				C36F2BD91F57A0C5008B96C4 /* netbios_ns.h in Headers */,
-				C36F2BDA1F57A0C5008B96C4 /* smb_defs.h in Headers */,
-				C36F2BDB1F57A0C5008B96C4 /* smb_dir.h in Headers */,
-				C36F2BDC1F57A0C5008B96C4 /* smb_file.h in Headers */,
-				C36F2BDD1F57A0C5008B96C4 /* smb_session.h in Headers */,
-				C36F2BDE1F57A0C5008B96C4 /* smb_share.h in Headers */,
-				C36F2BDF1F57A0C5008B96C4 /* smb_stat.h in Headers */,
-				C36F2BE01F57A0C5008B96C4 /* smb_types.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,12 +380,13 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Sources/libdsm",
+					"$(PROJECT_DIR)/libdsm",
+					"$(PROJECT_DIR)/External/libdsm",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClient;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/libdsm/bdsm";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/libdsm";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
@@ -467,12 +410,13 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Sources/libdsm",
+					"$(PROJECT_DIR)/libdsm",
+					"$(PROJECT_DIR)/External/libdsm",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClient;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/libdsm/bdsm";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/libdsm";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

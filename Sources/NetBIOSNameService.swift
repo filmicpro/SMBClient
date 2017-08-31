@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import libdsm
 
 public struct NetBIOSNameService {
     
@@ -15,7 +15,12 @@ public struct NetBIOSNameService {
     
     func startDiscovery(withTimeout timeout: TimeInterval) {
         
+        
+        
+        
     }
+    
+    
     
 }
 

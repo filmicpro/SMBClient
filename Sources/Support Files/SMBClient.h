@@ -6,9 +6,7 @@
 //  Copyright © 2017 Filmic. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-
-#import "netbios_ns.h"
+@import Foundation;
 
 //! Project version number for SMBClient.
 FOUNDATION_EXPORT double SMBClientVersionNumber;
