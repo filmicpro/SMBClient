@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+#import "netbios_ns.h"
+
 //! Project version number for SMBClient.
 FOUNDATION_EXPORT double SMBClientVersionNumber;
 

@@ -8,9 +8,14 @@
 
 import Foundation
 
-import "netbios_ns.h"
 
 public struct NetBIOSNameService {
     
-    private nameService =
+    private let nameService = netbios_ns_new()
+    
+    func startDiscovery(withTimeout timeout: TimeInterval) {
+        
+    }
+    
 }
+

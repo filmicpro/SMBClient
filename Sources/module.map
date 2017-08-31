@@ -1,0 +1,5 @@
+
+module libdsm [system] {
+    header "libdsm/bdsm/*.h"
+    export *
+}
