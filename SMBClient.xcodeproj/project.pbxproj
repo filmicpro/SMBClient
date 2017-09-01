@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */; };
 		C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */; };
+		C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494F1F59D2E600A0EB61 /* SMBSession.swift */; };
+		C33449521F59E67900A0EB61 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C33449511F59E67900A0EB61 /* libiconv.tbd */; };
 		C36F2BA91F5793B5008B96C4 /* SMBClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */; };
 		C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */; };
 		C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BA21F5793B5008B96C4 /* SMBClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -30,6 +32,8 @@
 /* Begin PBXFileReference section */
 		C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgingHelpers.swift; sourceTree = "<group>"; };
 		C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBIOSNameServiceEntry.swift; sourceTree = "<group>"; };
+		C334494F1F59D2E600A0EB61 /* SMBSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBSession.swift; sourceTree = "<group>"; };
+		C33449511F59E67900A0EB61 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SMBClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C36F2BA21F5793B5008B96C4 /* SMBClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMBClient.h; sourceTree = "<group>"; };
 		C36F2BA31F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -48,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C33449521F59E67900A0EB61 /* libiconv.tbd in Frameworks */,
 				C36F2BE91F58839C008B96C4 /* libtasn1.a in Frameworks */,
 				C36F2BEA1F58839C008B96C4 /* libdsm.a in Frameworks */,
 			);
@@ -90,6 +95,7 @@
 				C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */,
 				C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */,
 				C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */,
+				C334494F1F59D2E600A0EB61 /* SMBSession.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -115,6 +121,7 @@
 		C36F2BD31F57A0AB008B96C4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C33449511F59E67900A0EB61 /* libiconv.tbd */,
 				C36F2BE31F58830F008B96C4 /* libdsm.a */,
 				C36F2BE81F58839C008B96C4 /* libdsm.a */,
 				C36F2BE71F58839C008B96C4 /* libtasn1.a */,
@@ -235,6 +242,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */,
+				C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */,
 				C36F2BCC1F579566008B96C4 /* NetBIOSNameService.swift in Sources */,
 				C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */,
 			);

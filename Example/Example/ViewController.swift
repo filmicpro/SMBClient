@@ -50,6 +50,7 @@ extension ViewController: NetBIOSNameServiceDelegate {
     }
     func removed(entry: NetBIOSNameServiceEntry) {
         print("removed - \(entry)")
+        self.servers = self.servers.filter { $0 != entry }
     }
 }
 
@@ -73,5 +74,15 @@ extension ViewController: UITableViewDataSource {
         cell.textLabel?.text = server.name
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let svr = self.servers[indexPath.row]
+        
+        let sess = SMBSession()
+        sess.hostName = svr.name
+        sess.ipAddress = svr.ipAddressString
+        let conn = sess.attemptConnection()
+        print("conn: \(conn)")
     }
 }

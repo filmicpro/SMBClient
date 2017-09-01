@@ -61,6 +61,19 @@ public class NetBIOSNameService {
         return String(cString: name)
     }
     
+    public func resolveIPAddress(forName name: String, ofType type: NetBIOSNameServiceType) -> String? {
+        let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
+        let nameCString = name.cString(using: .utf8)
+        let result = netbios_ns_resolve(self.nameService, nameCString, type.typeValue, &addr.pointee.s_addr)
+        if result < 0 {
+            return nil
+        }
+        
+        let addressCString = inet_ntoa(addr.pointee)
+        guard let addressCStringValue = addressCString else { return nil }
+        return String(cString: addressCStringValue)
+    }
+    
     public func startDiscovery(withTimeout timeout: TimeInterval) {
         let blockPointer = bridge(obj: self)
         

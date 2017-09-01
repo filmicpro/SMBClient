@@ -28,6 +28,19 @@ public enum NetBIOSNameServiceType: Int8 {
             return nil
         }
     }
+    
+    internal var typeValue: Int8 {
+        switch self {
+        case .workstation:
+            return Int8(NETBIOS_WORKSTATION)
+        case .messenger:
+            return Int8(NETBIOS_MESSENGER)
+        case .fileServer:
+            return Int8(NETBIOS_FILESERVER)
+        case .domainMaster:
+            return Int8(NETBIOS_DOMAINMASTER)
+        }
+    }
 }
 
 public struct NetBIOSNameServiceEntry {
