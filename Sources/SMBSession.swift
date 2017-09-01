@@ -34,6 +34,69 @@ public class SMBSession {
     
     public init() { }
     
+    
+    public func requestContents(atFilePath path: String) -> [SMBFile] {
+        let conError = self.attemptConnection()
+        // switch result/error
+        if conError != nil {
+            return []
+        }
+        
+        if path.characters.count == 0 || path == "/" {
+            //let list = smb_share_list()
+            
+            // smb_share_get_list(self.session, &list, &shareCount)
+            // smb_share_get_list(<#T##s: OpaquePointer!##OpaquePointer!#>, <#T##list: UnsafeMutablePointer<smb_share_list?>!##UnsafeMutablePointer<smb_share_list?>!#>, <#T##p_count: UnsafeMutablePointer<Int>!##UnsafeMutablePointer<Int>!#>)
+            
+            //let list = UnsafeMutablePointer<smb_share_list?>.allocate(capacity: 1)
+            
+            //let list = ImplicitlyUnwrappedOptional.init(UnsafeMutablePointer<smb_share_list>).allocate(capacity: 1)
+            //ImplicitlyUnwrappedOptional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>>>
+            
+            // typealias smb_share_list = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>
+            
+            var list: smb_share_list? = smb_share_list.allocate(capacity: 1)
+            
+            let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+            shareCount.pointee = 0
+            
+//            Cannot convert value of type 'smb_share_list' (aka 'UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>') to
+            
+// expected argument type 'UnsafeMutablePointer<smb_share_list?>!' (aka 'ImplicitlyUnwrappedOptional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>>>')
+//  expected argument type 'smb_share_list?' (aka 'Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>
+            smb_share_get_list(self.smbSession, &list, shareCount)
+            
+            if shareCount.pointee == 0 {
+                return []
+            }
+            var results: [SMBFile] = []
+            
+            var i = 0
+            while i <= shareCount.pointee {
+                guard let shareNameCString = smb_share_list_at(list!, i) else {
+                    i = i + 1
+                    continue
+                }
+                
+                var shareName = String(cString: shareNameCString)
+                // skip system shares suffixed by '$'
+                if shareName.characters.last == "$" {
+                    i = i + 1
+                    continue
+                }
+                
+                if let f = SMBFile(name: shareName, session: self) {
+                    results.append(f)
+                }
+                
+                i = i + 1
+            }
+            return results
+        }
+        return []
+    }
+    
+    
     public func attemptConnection() -> SMBSessionError? {
         var err: SMBSessionError?
         serialQueue.sync {

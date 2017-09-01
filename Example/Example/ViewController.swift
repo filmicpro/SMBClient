@@ -82,7 +82,10 @@ extension ViewController: UITableViewDataSource {
         let sess = SMBSession()
         sess.hostName = svr.name
         sess.ipAddress = svr.ipAddressString
-        let conn = sess.attemptConnection()
-        print("conn: \(conn)")
+//        let conn = sess.attemptConnection()
+//        print("conn: \(conn)")
+        
+        let paths = sess.requestContents(atFilePath: "/")
+        print(paths)
     }
 }
