@@ -11,79 +11,64 @@ import libdsm
 
 typealias DiscoverCallback = @convention(c) (UnsafeMutableRawPointer?, OpaquePointer?) -> Void
 
-
-private func entryAddedCallback(p_opaque: UnsafeMutableRawPointer?, netbios_ns_entry: OpaquePointer?) {
-    
+public protocol NetBIOSNameServiceDelegate {
+    func added(entry: NetBIOSNameServiceEntry)
+    func removed(entry: NetBIOSNameServiceEntry)
 }
 
-private func entryRemovedCallback(p_opaque: UnsafeMutableRawPointer?, netbios_ns_entry: OpaquePointer?) {
-    
-}
-
-func bridge<T : AnyObject>(obj : T) -> UnsafeMutableRawPointer {
-    return UnsafeMutableRawPointer(Unmanaged.passUnretained(obj).toOpaque())
-}
-
-func bridge<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
-    return Unmanaged<T>.fromOpaque(ptr).takeUnretainedValue()
-}
-
-func bridgeRetained<T : AnyObject>(obj : T) -> UnsafeRawPointer {
-    return UnsafeRawPointer(Unmanaged.passRetained(obj).toOpaque())
-}
-
-func bridgeTransfer<T : AnyObject>(ptr : UnsafeRawPointer) -> T {
-    return Unmanaged<T>.fromOpaque(ptr).takeRetainedValue()
-}
 public class NetBIOSNameService {
     
     private let nameService = netbios_ns_new()
     
+    public var delegate: NetBIOSNameServiceDelegate?
+    
     public init() { }
     
-    public func startDiscovery(withTimeout timeout: TimeInterval) {
-        
-        
-        
-//        netbios_ns_discover_callbacks(p_opaque: <#T##UnsafeMutableRawPointer!#>, pf_on_entry_added: <#T##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##(UnsafeMutableRawPointer?, OpaquePointer?) -> Void#>, pf_on_entry_removed: <#T##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##(UnsafeMutableRawPointer?, OpaquePointer?) -> Void#>)
-        let blockPointer = bridge(obj: self)
-        
-//        var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer, pf_on_entry_added: entryAddedCallback(p_opaque: <#T##UnsafeMutableRawPointer?#>, netbios_ns_entry: <#T##OpaquePointer?#>), pf_on_entry_removed: <#T##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##((UnsafeMutableRawPointer?, OpaquePointer?) -> Void)!##(UnsafeMutableRawPointer?, OpaquePointer?) -> Void#>)
-        
-//        let added = entryAddedCallback(p_opaque: unsafeMutableRawPointer, netbios_ns_entry: opaquePointer) {
-//
-//        }()
-        let x: @convention(c) (UnsafeMutableRawPointer?, OpaquePointer?) -> Void = {
-            (x, netbios_ns_entry) -> Void in
-            print(x)
-            if let ent = NetBiosNameServiceEntry(cEntity: netbios_ns_entry) {
-                print(ent.name)
+    deinit {
+        netbios_ns_discover_stop(self.nameService)
+        self.onAdded = nil
+        self.onRemoved = nil
+        netbios_ns_destroy(self.nameService)
+    }
+    
+    private var onAdded: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
+        if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
+            // https://stackoverflow.com/questions/33551191/swift-pass-data-to-a-closure-that-captures-context
+            if let ptr = p_opaque {
+                // if EXC_BAD_ACCESS is thrown here it's because 'this' instance of NetBIOSNameService has been deallocated
+                // while netbios_ns_discover_start is still firing callbacks
+                let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(ptr).takeUnretainedValue()
+                mySelf.delegate?.added(entry: ent)
             }
         }
-        
-        var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer, pf_on_entry_added: x, pf_on_entry_removed: x)
-        
-//        netbios_ns_discover_start(self.nameService, UInt32(timeout), <#T##callbacks: UnsafeMutablePointer<netbios_ns_discover_callbacks>!##UnsafeMutablePointer<netbios_ns_discover_callbacks>!#>)
-        netbios_ns_discover_start(self.nameService, UInt32(timeout), &cb)
-        
     }
     
-//    private func @convention(c) onEntityRemoved(p_opaque: UnsafeMutableRawPointer?, netbiosNSEntry: OpaquePointer?) -> Void {
-////        (x, netbios_ns_entry) -> Void in
-//        print(p_opaque)
-//        if let ent = NetBiosNameServiceEntry(cEntity: netbiosNSEntry) {
-//            print(ent.name)
-//        }
-//    }
+    private var onRemoved: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
+        if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
+            guard let ptr = p_opaque else { return }
+            let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(ptr).takeUnretainedValue()
+            mySelf.delegate?.removed(entry: ent)
+        }
+    }
+    
+    // will return empty string if host is present, unreachable host returns nil
+    public func networkNameFor(ipAddress: String) -> String? {
+        let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
+        let addrString = ipAddress.cString(using: .ascii)
+        inet_aton(addrString, addr)
+        let nameChar = netbios_ns_inverse(self.nameService, addr.pointee.s_addr)
+        guard let name = nameChar else { return nil }
+        return String(cString: name)
+    }
+    
+    public func startDiscovery(withTimeout timeout: TimeInterval) {
+        let blockPointer = bridge(obj: self)
+        
+        var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer, pf_on_entry_added: self.onAdded, pf_on_entry_removed: self.onRemoved)
+        netbios_ns_discover_start(self.nameService, UInt32(timeout), &cb)
+    }
+    
 }
 
-public struct NetBiosNameServiceEntry {
-    let name: String
-    
-    init?(cEntity: OpaquePointer?) {
-        guard let entity = cEntity else { return nil }
-        guard let nameBits = netbios_ns_entry_name(entity) else { return nil } // UnsafePointer<Int8>
-        self.name = String(cString: nameBits)
-    }
-}
+
 

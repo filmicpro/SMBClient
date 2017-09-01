@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */; };
+		C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */; };
 		C36F2BA91F5793B5008B96C4 /* SMBClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */; };
 		C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */; };
 		C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BA21F5793B5008B96C4 /* SMBClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -26,6 +28,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgingHelpers.swift; sourceTree = "<group>"; };
+		C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBIOSNameServiceEntry.swift; sourceTree = "<group>"; };
 		C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SMBClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C36F2BA21F5793B5008B96C4 /* SMBClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMBClient.h; sourceTree = "<group>"; };
 		C36F2BA31F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -84,6 +88,8 @@
 			children = (
 				C36F2BCF1F579683008B96C4 /* Support Files */,
 				C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */,
+				C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */,
+				C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -228,7 +234,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */,
 				C36F2BCC1F579566008B96C4 /* NetBIOSNameService.swift in Sources */,
+				C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
