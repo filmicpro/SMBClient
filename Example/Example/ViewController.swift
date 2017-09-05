@@ -40,6 +40,13 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let dest = segue.destination as? FilesTableViewController {
+            dest.session = sender as? SMBSession
+            dest.path = "/"
+            
+        }
+    }
 
 }
 
@@ -85,7 +92,12 @@ extension ViewController: UITableViewDataSource {
 //        let conn = sess.attemptConnection()
 //        print("conn: \(conn)")
         
-        let paths = sess.requestContents(atFilePath: "/")
-        print(paths)
+//        let paths = sess.requestContents(atFilePath: "/")
+//        print(paths)
+        
+        let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")
+        self.navigationController?.pushViewController(vc, animated: true)
+        
+        // self.performSegue(withIdentifier: "showFiles", sender: sess)
     }
 }

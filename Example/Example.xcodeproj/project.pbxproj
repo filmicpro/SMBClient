@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C33E67351F5F153B00A55C29 /* FilesTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */; };
 		C3A03F051F58914000059EDA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A03F041F58914000059EDA /* AppDelegate.swift */; };
 		C3A03F071F58914000059EDA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A03F061F58914000059EDA /* ViewController.swift */; };
 		C3A03F0A1F58914000059EDA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C3A03F081F58914000059EDA /* Main.storyboard */; };
@@ -50,6 +51,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTableViewController.swift; sourceTree = "<group>"; };
 		C3A03F011F58914000059EDA /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3A03F041F58914000059EDA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C3A03F061F58914000059EDA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 			children = (
 				C3A03F041F58914000059EDA /* AppDelegate.swift */,
 				C3A03F061F58914000059EDA /* ViewController.swift */,
+				C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */,
 				C3A03F081F58914000059EDA /* Main.storyboard */,
 				C3A03F0B1F58914000059EDA /* Assets.xcassets */,
 				C3A03F0D1F58914000059EDA /* LaunchScreen.storyboard */,
@@ -289,6 +292,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C33E67351F5F153B00A55C29 /* FilesTableViewController.swift in Sources */,
 				C3A03F071F58914000059EDA /* ViewController.swift in Sources */,
 				C3A03F051F58914000059EDA /* AppDelegate.swift in Sources */,
 			);

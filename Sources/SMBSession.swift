@@ -34,6 +34,8 @@ public class SMBSession {
     
     public init() { }
     
+//    public func requestContents(ofShare: SMBShare)
+//    public func requestContents(ofDirectory: SMBDirectory)
     
     public func requestContents(atFilePath path: String) -> [SMBFile] {
         let conError = self.attemptConnection()
@@ -43,27 +45,11 @@ public class SMBSession {
         }
         
         if path.characters.count == 0 || path == "/" {
-            //let list = smb_share_list()
-            
-            // smb_share_get_list(self.session, &list, &shareCount)
-            // smb_share_get_list(<#T##s: OpaquePointer!##OpaquePointer!#>, <#T##list: UnsafeMutablePointer<smb_share_list?>!##UnsafeMutablePointer<smb_share_list?>!#>, <#T##p_count: UnsafeMutablePointer<Int>!##UnsafeMutablePointer<Int>!#>)
-            
-            //let list = UnsafeMutablePointer<smb_share_list?>.allocate(capacity: 1)
-            
-            //let list = ImplicitlyUnwrappedOptional.init(UnsafeMutablePointer<smb_share_list>).allocate(capacity: 1)
-            //ImplicitlyUnwrappedOptional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>>>
-            
-            // typealias smb_share_list = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>
-            
             var list: smb_share_list? = smb_share_list.allocate(capacity: 1)
             
             let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
             shareCount.pointee = 0
             
-//            Cannot convert value of type 'smb_share_list' (aka 'UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>') to
-            
-// expected argument type 'UnsafeMutablePointer<smb_share_list?>!' (aka 'ImplicitlyUnwrappedOptional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>>>')
-//  expected argument type 'smb_share_list?' (aka 'Optional<UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>>
             smb_share_get_list(self.smbSession, &list, shareCount)
             
             if shareCount.pointee == 0 {
@@ -93,9 +79,62 @@ public class SMBSession {
             }
             return results
         }
-        return []
+        
+        let (shareName, filePath) = shareAndPathFrom(path: path)
+        
+        var shareId: UInt16 = smb_tid.max
+        smb_tree_connect(self.smbSession, shareName.cString(using: .utf8), &shareId)
+        if shareId == smb_tid.max {
+            return []
+        }
+        let directoryPath = filePath ?? "/"
+//        let directoryPath = filePath else { return [] }
+        let relativePath = directoryPath + "*" // wildcard to search
+        
+        let statList = smb_find(self.smbSession, shareId, relativePath.cString(using: .utf8))
+        let listCount = smb_stat_list_count(statList)
+        if listCount == 0 {
+            return []
+        }
+        
+        var results: [SMBFile] = []
+        
+        var i = 0
+        while i < listCount {
+            let item = smb_stat_list_at(statList, i)
+            guard let stat = item else { i = i + 1; continue }
+            guard let file = SMBFile(stat: stat, session: self, parentDirectoryFilePath: directoryPath) else {
+                i = i + 1
+                continue
+            }
+            
+            if file.name.first != "." {
+                results.append(file)
+            }
+            
+            i = i + 1
+        }
+        
+        return results
     }
     
+//    private func shareNameFrom(path: String) -> String {
+//        let items = path.split(separator: "/")
+//        return items[0]!
+//    }
+//
+//    private func filePath(path: String) -> String {
+//
+//    }
+    
+    private func shareAndPathFrom(path: String) -> (String, String?) {
+        let items = path.split(separator: "/")
+        if items.count == 1 {
+            return (String(items[0]), nil)
+        }
+        let filePath = items[1...].joined(separator: "\\")
+        return (String(items[0]), filePath)
+    }
     
     public func attemptConnection() -> SMBSessionError? {
         var err: SMBSessionError?
