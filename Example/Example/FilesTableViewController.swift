@@ -95,6 +95,16 @@ extension FilesTableViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let file = self.files?[indexPath.row] else { return }
         guard let currentPath = self.path else { return }
+        
+        if !file.isDirectory {
+            let task = self.session?.downloadTaskForFile(atPath: "\(currentPath)/\(file.name)", destinationPath: nil, delegate: nil)
+            if let t = task {
+                t.resume()
+            }
+            return
+        }
+        
+        
         let newPath: String
         if currentPath != "/" {
             newPath = "\(currentPath)/\(file.name)"

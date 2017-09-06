@@ -18,6 +18,8 @@
 		C36F2BCC1F579566008B96C4 /* NetBIOSNameService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */; };
 		C36F2BE91F58839C008B96C4 /* libtasn1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BE71F58839C008B96C4 /* libtasn1.a */; };
 		C36F2BEA1F58839C008B96C4 /* libdsm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2BE81F58839C008B96C4 /* libdsm.a */; };
+		C3929C4D1F5F2F6A0014B804 /* SessionDownloadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C4C1F5F2F6A0014B804 /* SessionDownloadTask.swift */; };
+		C3929C4F1F5F302D0014B804 /* SessionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C4E1F5F302D0014B804 /* SessionTask.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +49,8 @@
 		C36F2BE41F58830F008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = External/libdsm/libtasn1.a; sourceTree = "<group>"; };
 		C36F2BE71F58839C008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = libdsm/libtasn1.a; sourceTree = "<group>"; };
 		C36F2BE81F58839C008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdsm.a; path = libdsm/libdsm.a; sourceTree = "<group>"; };
+		C3929C4C1F5F2F6A0014B804 /* SessionDownloadTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDownloadTask.swift; sourceTree = "<group>"; };
+		C3929C4E1F5F302D0014B804 /* SessionTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTask.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +103,8 @@
 				C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */,
 				C334494F1F59D2E600A0EB61 /* SMBSession.swift */,
 				C33449531F59FB6000A0EB61 /* SMBFile.swift */,
+				C3929C4C1F5F2F6A0014B804 /* SessionDownloadTask.swift */,
+				C3929C4E1F5F302D0014B804 /* SessionTask.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -245,9 +251,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */,
+				C3929C4D1F5F2F6A0014B804 /* SessionDownloadTask.swift in Sources */,
 				C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */,
 				C33449541F59FB6000A0EB61 /* SMBFile.swift in Sources */,
 				C36F2BCC1F579566008B96C4 /* NetBIOSNameService.swift in Sources */,
+				C3929C4F1F5F302D0014B804 /* SessionTask.swift in Sources */,
 				C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

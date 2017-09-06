@@ -21,7 +21,7 @@ public enum SessionGuestState: Int32 {
 }
 
 public class SMBSession {
-    private var smbSession = smb_session_new()
+    internal var smbSession = smb_session_new()
     private var lastRequestDate: Date?
     private var serialQueue = DispatchQueue(label: "SMBSession")
     
@@ -31,6 +31,17 @@ public class SMBSession {
     public var password: String?
     public var sessionGuestState: SessionGuestState?
     public var connected: Bool = false
+    
+    public var maxTaskOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
+    
+    // tasks
+    var downloadTasks: [SessionDownloadTask] = []
+    lazy var taskQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = self.maxTaskOperationCount
+        return queue
+    }()
+    
     
     public init() { }
     
@@ -127,7 +138,7 @@ public class SMBSession {
 //
 //    }
     
-    private func shareAndPathFrom(path: String) -> (String, String?) {
+    internal func shareAndPathFrom(path: String) -> (String, String?) {
         let items = path.split(separator: "/")
         if items.count == 1 {
             return (String(items[0]), nil)
@@ -206,9 +217,7 @@ public class SMBSession {
         let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
         inet_aton(ipAddress.cString(using: .ascii), &addr.pointee)
         
-        
         // attempt a connection
-//        let connectionResult = smb_session_connect(<#T##s: OpaquePointer!##OpaquePointer!#>, <#T##hostname: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##ip: UInt32##UInt32#>, <#T##transport: Int32##Int32#>)
         let connectionResult = smb_session_connect(smbSession, hostName?.cString(using: .utf8), addr.pointee.s_addr, Int32(SMB_TRANSPORT_TCP))
         if connectionResult != 0 {
             return SMBSessionError.unableToConnect
@@ -238,6 +247,16 @@ public class SMBSession {
         }
         
         return nil
+    }
+    
+    public func downloadTaskForFile(atPath path: String, destinationPath: String?, delegate: SessionDownloadTaskDelegate?) -> SessionDownloadTask {
+        let task = SessionDownloadTask(session: self, sourceFilePath: path, destinationFilePath: destinationPath, delegate: delegate)
+        self.downloadTasks.append(task)
+        return task
+    }
+    
+    func cancelAllRequests() {
+        
     }
     
     deinit {
