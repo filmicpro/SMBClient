@@ -53,7 +53,18 @@ class FilesTableViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-
+    @IBAction func addButtonTapped(_ sender: UIBarButtonItem) {
+        guard let session = self.session else { return }
+        guard let path = self.path else { return }
+        
+        let uploadPath = "\(path)/\(UUID().uuidString).txt"
+        guard let data = uploadPath.data(using: .utf8) else { return }
+        
+        let uploadTask = session.uploadTaskForFile(atPath: uploadPath, data: data, delegate: self)
+        uploadTask.resume()
+        
+    }
+    
     /*
     // MARK: - Navigation
 
@@ -64,6 +75,21 @@ class FilesTableViewController: UIViewController {
     }
     */
 
+}
+
+extension FilesTableViewController: SessionUploadTaskDelegate {
+    func uploadTask(didFinishUploading: SessionUploadTask) {
+        //
+        print("did finish uploading")
+    }
+    
+    func uploadTask(didCompleteWithError: SessionUploadError) {
+        print("error uploading: \(didCompleteWithError)")
+    }
+    
+    func uploadTask(_ task: SessionUploadTask, totalBytesSent: UInt64, totalBytesExpected: UInt64) {
+        print("progress uploading!")
+    }
 }
 
 extension FilesTableViewController: UITableViewDelegate {

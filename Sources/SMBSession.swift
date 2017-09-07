@@ -23,7 +23,7 @@ public enum SessionGuestState: Int32 {
 public class SMBSession {
     internal var smbSession = smb_session_new()
     private var lastRequestDate: Date?
-    private var serialQueue = DispatchQueue(label: "SMBSession")
+    internal var serialQueue = DispatchQueue(label: "SMBSession")
     
     public var hostName: String?
     public var ipAddress: String?
@@ -36,6 +36,7 @@ public class SMBSession {
     
     // tasks
     var downloadTasks: [SessionDownloadTask] = []
+    var uploadTasks: [SessionUploadTask] = []
     lazy var taskQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = self.maxTaskOperationCount
@@ -149,8 +150,8 @@ public class SMBSession {
     
     public func attemptConnection() -> SMBSessionError? {
         var err: SMBSessionError?
-        serialQueue.sync {
-            err = self.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
+        serialQueue.sync { [weak self] in
+            err = self?.attemptConnectionWithSessionPointer(smbSession: self!.smbSession)
         }
         
         if err != nil {
@@ -255,6 +256,13 @@ public class SMBSession {
         return task
     }
     
+    @discardableResult public func uploadTaskForFile(atPath path: String, data: Data, delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
+        let task = SessionUploadTask(session: self, path: path, data: data)
+        task.delegate = delegate
+        self.uploadTasks.append(task)
+        return task
+    }
+    
     func cancelAllRequests() {
         
     }
@@ -263,4 +271,11 @@ public class SMBSession {
         guard let s = self.smbSession else { return }
         smb_session_destroy(s)
     }
+}
+
+extension SMBSession: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return "hostname : \(self.hostName)\nipAddress : \(self.ipAddress)\nuserName : \(self.userName)\nconnected : \(self.connected)"
+    }
+    
 }

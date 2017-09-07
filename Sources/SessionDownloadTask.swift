@@ -63,6 +63,36 @@ public class SessionDownloadTask: SessionTask {
         }
     }
     
+    private var finalFilePathForDownloadedFile: URL? {
+        guard let dest = self.destinationFilePath else { return nil }
+        let path = URL(fileURLWithPath: dest)
+        
+        //
+        var fileName = path.lastPathComponent
+        let isFile = fileName.contains(".") && fileName.characters.first != "."
+        
+        let folderPath: URL
+        if isFile {
+            folderPath = path.deletingLastPathComponent()
+        } else {
+            let source = URL(fileURLWithPath: self.sourceFilePath)
+            fileName = source.lastPathComponent
+            folderPath = path
+        }
+        
+        var newFilePath = path
+        var newFileName = fileName
+        
+        var index = 0
+        while FileManager.default.fileExists(atPath: newFilePath.absoluteString) {
+            let fileNameURL = URL(fileURLWithPath: fileName)
+            index = index + 1
+            newFileName = "\(fileNameURL.deletingPathExtension())-\(index).\(fileNameURL.pathExtension)"
+            newFilePath = folderPath.appendingPathComponent(newFileName)
+        }
+        return newFilePath
+    }
+    
     override func performTaskWith(operation: BlockOperation) {
         if operation.isCancelled {
             delegateError(.cancelled)
@@ -131,7 +161,7 @@ public class SessionDownloadTask: SessionTask {
         }
         
         // open a handle to file
-        let fileHandle = FileHandle.init(forWritingAtPath: self.tempPathForTemoraryDestination)
+        let fileHandle = FileHandle(forWritingAtPath: self.tempPathForTemoraryDestination)
         let seekOffset = fileHandle?.seekToEndOfFile()
         self.bytesReceived = seekOffset ?? 0
         
@@ -190,9 +220,18 @@ public class SessionDownloadTask: SessionTask {
         }
         
         // ### Move the finished file to its destination
-        guard let finalDestination = destinationFilePath else { return }
-        
-        
+        guard let finalDestination = self.finalFilePathForDownloadedFile else { return }
+
+        do {
+            try FileManager.default.moveItem(at: URL(fileURLWithPath: self.tempPathForTemoraryDestination), to: finalDestination)
+        } catch {
+            delegateError(.downloadFailed)
+        }
+        self.state = .completed
+        self.delegateQueue.async {
+            self.delegate?.downloadTask(didFinishDownloadingToPath: finalDestination.absoluteString)
+        }
+        self.cleanupBlock(treeId: treeId, fileId: fileId)
     }
     
     func suspend() {

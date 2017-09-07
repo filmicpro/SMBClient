@@ -103,6 +103,13 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="EKA-kd-he4"/>
                     </view>
+                    <navigationItem key="navigationItem" title="Title" id="mic-K6-CaQ">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="GLi-vu-QLJ">
+                            <connections>
+                                <action selector="addButtonTapped:" destination="hI3-L7-iWf" id="zgH-we-uJR"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="tableView" destination="ZYV-g4-Wzj" id="VtA-of-tXj"/>
                     </connections>
