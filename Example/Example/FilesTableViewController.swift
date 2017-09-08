@@ -145,18 +145,10 @@ extension FilesTableViewController: UITableViewDataSource {
             }
         }
         
+        self.tableView.deselectRow(at: indexPath, animated: true)
+        
         let vc = UIStoryboard.fileTableViewController(session: self.session!, title: file.name, path: newPath)
         self.navigationController?.pushViewController(vc, animated: true)
-//        let svr = self.servers[indexPath.row]
-//
-//        let sess = SMBSession()
-//        sess.hostName = svr.name
-//        sess.ipAddress = svr.ipAddressString
-//        //        let conn = sess.attemptConnection()
-//        //        print("conn: \(conn)")
-//
-//        let paths = sess.requestContents(atFilePath: "/")
-//        print(paths)
     }
 }
 

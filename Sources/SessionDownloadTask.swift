@@ -103,10 +103,29 @@ public class SessionDownloadTask: SessionTask {
         var treeId = smb_tid(0)
         var fileId = smb_fd(0)
         
-        // make sure the connection is active
-        let (shareName, reqPath) = self.smbSession.shareAndPathFrom(path: self.sourceFilePath)
+        // Connect to SMB Server
+        
+        self.smbSession = smb_session_new()
+        
+        var connectError: SMBSessionError? = nil
+        self.session.serialQueue.sync {
+            connectError = self.session.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
+        }
+        if connectError != nil {
+            delegateError(.serverNotFound)
+            self.cleanupBlock(treeId: treeId, fileId: fileId)
+            return
+        }
+        
+        if operation.isCancelled {
+            self.cleanupBlock(treeId: treeId, fileId: fileId)
+            return
+        }
+        
+        // Connect to the share
+        let (shareName, reqPath) = self.session.shareAndPathFrom(path: self.sourceFilePath)
         let shareCString = shareName.cString(using: .utf8)
-        smb_tree_connect(self.smbSession.smbSession, shareCString, &treeId)
+        smb_tree_connect(self.smbSession, shareCString, &treeId)
         
         if treeId == 0 {
             delegateError(.serverNotFound)
@@ -134,7 +153,7 @@ public class SessionDownloadTask: SessionTask {
         let formattedPath = "\\\(filePath)".replacingOccurrences(of: "/", with: "\\\\")
         
         // ### Open file handle
-        smb_fopen(self.smbSession.smbSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_READ), &fileId)
+        smb_fopen(self.smbSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_READ), &fileId)
         if fileId == 0 {
             // return error TODO
             delegateError(.fileNotFound)
@@ -174,7 +193,7 @@ public class SessionDownloadTask: SessionTask {
         
         if let so = seekOffset {
             if so > 0 {
-                smb_fseek(self.smbSession.smbSession, fileId, Int64(so), Int32(SMB_SEEK_SET))
+                smb_fseek(self.smbSession, fileId, Int64(so), Int32(SMB_SEEK_SET))
                 // self.didResumeOffset(seekOffset: so, totalBytesExpeted: self.bytesExpected!) // TODO
             }
         }
@@ -185,9 +204,9 @@ public class SessionDownloadTask: SessionTask {
         let buffer = UnsafeMutableRawPointer.allocate(bytes: bufferSize, alignedTo: 1)
         
         repeat {
-            bytesRead = smb_fread(self.smbSession.smbSession, fileId, buffer, bufferSize)
+            bytesRead = smb_fread(self.smbSession, fileId, buffer, bufferSize)
             if (bytesRead < 0) {
-                 self.fail()
+                self.fail()
                 delegateError(.downloadFailed)
                 break
             }
@@ -212,7 +231,7 @@ public class SessionDownloadTask: SessionTask {
                 try FileManager.default.setAttributes([FileAttributeKey.modificationDate: modAt], ofItemAtPath: self.tempPathForTemoraryDestination)
             }
         } catch {
-            // TODO
+            // updating the timestamp doesn't matter that much
         }
         
         // free(buffer)
@@ -258,14 +277,14 @@ public class SessionDownloadTask: SessionTask {
             do {
                 try FileManager.default.removeItem(atPath: self.tempPathForTemoraryDestination)
             } catch {
-                // poop
+                // TODO
             }
         }
         let deleteOperation = BlockOperation(block: deleteFunc)
         if let op = self.taskOperation {
             deleteOperation.addDependency(op)
         }
-        self.smbSession.taskQueue.addOperation(deleteOperation)
+        self.session.taskQueue.addOperation(deleteOperation)
         
         self.taskOperation?.cancel()
         self.state = .cancelled

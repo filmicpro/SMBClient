@@ -182,7 +182,7 @@ public class SMBSession {
         return nil
     }
     
-    private func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
+    internal func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
         
         // if we're connecting from a dowload task, and the sessions match, make sure to refresh them periodically
         if (self.smbSession == smbSession) {

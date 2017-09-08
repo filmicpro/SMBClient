@@ -20,19 +20,20 @@ public enum SessionTaskState {
 }
 
 public class SessionTask {
-    var smbSession: SMBSession
+    var session: SMBSession
     var delegateQueue: DispatchQueue
     var canBeResumed: Bool = false
     var state: SessionTaskState = .ready
     
+    internal var smbSession: OpaquePointer?
     internal var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
     
     init(session: SMBSession, delegateQueue: DispatchQueue = DispatchQueue.main) {
-        self.smbSession = session
+        self.session = session
         self.delegateQueue = delegateQueue
     }
     
-    lazy var taskOperation: BlockOperation? = {
+    internal lazy var taskOperation: BlockOperation? = {
         var result = BlockOperation()
         result.addExecutionBlock {
             self.performTaskWith(operation: result)
@@ -49,15 +50,15 @@ public class SessionTask {
     
     func requestFileForItemAt(path: String, inTree treeId: smb_tid) -> SMBFile? {
         let fileCString = path.cString(using: .utf8)
-        guard let stat = smb_fstat(self.smbSession.smbSession, treeId, fileCString) else { return nil }
+        guard let stat = smb_fstat(self.smbSession, treeId, fileCString) else { return nil }
         
-        let file = SMBFile(stat: stat, session: self.smbSession, parentDirectoryFilePath: path)
+        let file = SMBFile(stat: stat, session: self.session, parentDirectoryFilePath: path)
         
         smb_stat_destroy(stat)
         return file
     }
     
-    func cleanupBlock(treeId: smb_tid, fileId: smb_fd) {
+    internal func cleanupBlock(treeId: smb_tid, fileId: smb_fd) {
         if let backgroundTask = self.backgroundTaskIdentifier {
             UIApplication.shared.endBackgroundTask(backgroundTask)
             self.backgroundTaskIdentifier = nil
@@ -65,10 +66,10 @@ public class SessionTask {
         
         
         if self.taskOperation != nil && treeId > 0 {
-            smb_tree_disconnect(self.smbSession.smbSession, treeId)
+            smb_tree_disconnect(self.smbSession, treeId)
         }
         
-        if let session = self.smbSession.smbSession {
+        if let session = self.smbSession {
             if fileId > 0 {
                 smb_fclose(session, fileId)
             }
@@ -100,7 +101,7 @@ public class SessionTask {
         guard let to = self.taskOperation else {
             return
         }
-        self.smbSession.taskQueue.addOperation(to)
+        self.session.taskQueue.addOperation(to)
         self.state = .running
     }
 
