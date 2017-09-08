@@ -22,8 +22,14 @@ public enum SessionGuestState: Int32 {
 
 public class SMBSession {
     internal var smbSession = smb_session_new()
-    private var lastRequestDate: Date?
     internal var serialQueue = DispatchQueue(label: "SMBSession")
+    
+    lazy var dataQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        return queue
+    }()
+    private var lastRequestDate: Date?
     
     public var hostName: String?
     public var ipAddress: String?
@@ -48,11 +54,11 @@ public class SMBSession {
 //    public func requestContents(ofShare: SMBShare)
 //    public func requestContents(ofDirectory: SMBDirectory)
     
-    public func requestContents(atFilePath path: String) -> [SMBFile] {
+    public func requestContents(atFilePath path: String) -> Result<[SMBFile]> {
         let conError = self.attemptConnection()
         // switch result/error
-        if conError != nil {
-            return []
+        if let error = conError {
+            return Result.failure(error)
         }
         
         if path.characters.count == 0 || path == "/" {
@@ -64,7 +70,7 @@ public class SMBSession {
             smb_share_get_list(self.smbSession, &list, shareCount)
             
             if shareCount.pointee == 0 {
-                return []
+                return Result.success([])
             }
             var results: [SMBFile] = []
             
@@ -88,7 +94,7 @@ public class SMBSession {
                 
                 i = i + 1
             }
-            return results
+            return Result.success(results)
         }
         
         let (shareName, filePath) = shareAndPathFrom(path: path)
@@ -96,7 +102,7 @@ public class SMBSession {
         var shareId: UInt16 = smb_tid.max
         smb_tree_connect(self.smbSession, shareName.cString(using: .utf8), &shareId)
         if shareId == smb_tid.max {
-            return []
+            return Result.success([])
         }
         let directoryPath = filePath ?? ""
         var relativePath = "/" + directoryPath // wildcard to search
@@ -111,7 +117,7 @@ public class SMBSession {
         let statList = smb_find(self.smbSession, shareId, relativePath.cString(using: .utf8))
         let listCount = smb_stat_list_count(statList)
         if listCount == 0 {
-            return []
+            return Result.success([])
         }
         
         var results: [SMBFile] = []
@@ -132,7 +138,24 @@ public class SMBSession {
             i = i + 1
         }
         
-        return results
+        return Result.success(results)
+    }
+    
+    public func requestContentsOfDirectory(atPath path: String, completionQueue: DispatchQueue = DispatchQueue.main, completion: @escaping (_ result: Result<[SMBFile]>) -> Void) {
+        let operation = BlockOperation()
+        
+        let blockOperation = {
+            if operation.isCancelled {
+                return
+            }
+            let requestResult = self.requestContents(atFilePath: path)
+            
+            completionQueue.async {
+                completion(requestResult)
+            }
+        }
+        operation.addExecutionBlock(blockOperation)
+        self.dataQueue.addOperation(operation)
     }
     
     internal func shareAndPathFrom(path: String) -> (String, String?) {
@@ -260,7 +283,7 @@ public class SMBSession {
     }
     
     func cancelAllRequests() {
-        
+        self.dataQueue.cancelAllOperations()
     }
     
     deinit {

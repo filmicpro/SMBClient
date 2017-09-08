@@ -29,9 +29,29 @@ class FilesTableViewController: UIViewController {
         
         guard let session = self.session else { return }
         guard let path = self.path else { return }
-        self.files = session.requestContents(atFilePath: path)
         
+        self.title = "Loading..."
         
+        session.requestContentsOfDirectory(atPath: path) { (result) in
+            self.title = path
+            switch result {
+            case .success(let files):
+                self.files = files
+            case .failure(let error):
+                self.files = []
+                print("error requesting files: \(error)")
+            }
+        }
+        
+        // synchronous way to list files
+//        switch session.requestContents(atFilePath: path) {
+//        case .success(let files):
+//            self.files = files
+//        case .failure(let error):
+//            self.files = []
+//            print("error requesting files: \(error)")
+//        }
+//        self.files = session.requestContents(atFilePath: path)
     }
 
     override func didReceiveMemoryWarning() {
@@ -48,7 +68,6 @@ class FilesTableViewController: UIViewController {
         
         let uploadTask = session.uploadTaskForFile(atPath: uploadPath, data: data, delegate: self)
         uploadTask.resume()
-        
     }
     
     /*

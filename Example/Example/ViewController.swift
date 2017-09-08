@@ -90,11 +90,6 @@ extension ViewController: UITableViewDataSource {
         let sess = SMBSession()
         sess.hostName = svr.name
         sess.ipAddress = svr.ipAddressString
-//        let conn = sess.attemptConnection()
-//        print("conn: \(conn)")
-        
-//        let paths = sess.requestContents(atFilePath: "/")
-//        print(paths)
         
         let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")
         self.navigationController?.pushViewController(vc, animated: true)
