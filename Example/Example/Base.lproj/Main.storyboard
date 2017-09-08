@@ -5,6 +5,7 @@
     </device>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13165.3"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -112,11 +113,60 @@
                     </navigationItem>
                     <connections>
                         <outlet property="tableView" destination="ZYV-g4-Wzj" id="VtA-of-tXj"/>
+                        <segue destination="ICe-c6-R2f" kind="show" id="YeV-02-b9M"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jgf-av-DRd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1328.8" y="132.68365817091455"/>
+        </scene>
+        <!--Title-->
+        <scene sceneID="IBP-xF-I34">
+            <objects>
+                <viewController storyboardIdentifier="DownloadProgressViewController" id="ICe-c6-R2f" customClass="DownloadProgressViewController" customModule="Example" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ns1-A7-EW1">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="cPP-kF-gdR">
+                                <rect key="frame" x="16" y="245" width="343" height="2"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="2" id="rHT-u3-hVH"/>
+                                </constraints>
+                            </progressView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qFr-oz-5eu">
+                                <rect key="frame" x="16" y="124" width="343" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="s7E-zB-ouB" firstAttribute="trailing" secondItem="qFr-oz-5eu" secondAttribute="trailing" constant="16" id="Ye0-lv-vpD"/>
+                            <constraint firstItem="qFr-oz-5eu" firstAttribute="leading" secondItem="s7E-zB-ouB" secondAttribute="leading" constant="16" id="Ymc-uh-MlQ"/>
+                            <constraint firstItem="qFr-oz-5eu" firstAttribute="top" secondItem="s7E-zB-ouB" secondAttribute="top" constant="60" id="mRT-oe-UNA"/>
+                            <constraint firstItem="cPP-kF-gdR" firstAttribute="trailing" secondItem="Ns1-A7-EW1" secondAttribute="trailingMargin" id="pEf-aS-eG6"/>
+                            <constraint firstItem="cPP-kF-gdR" firstAttribute="top" secondItem="qFr-oz-5eu" secondAttribute="bottom" constant="100" id="syy-4E-xeX"/>
+                            <constraint firstItem="cPP-kF-gdR" firstAttribute="leading" secondItem="Ns1-A7-EW1" secondAttribute="leadingMargin" id="zkK-N8-A2h"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="s7E-zB-ouB"/>
+                    </view>
+                    <navigationItem key="navigationItem" title="Title" id="l16-i2-vp3">
+                        <barButtonItem key="rightBarButtonItem" systemItem="cancel" id="9Wz-rj-Iyr">
+                            <connections>
+                                <action selector="cancelButtonTapped:" destination="ICe-c6-R2f" id="uLx-ka-kGN"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="downloadProgressView" destination="cPP-kF-gdR" id="nFS-Vb-oxa"/>
+                        <outlet property="fileLabel" destination="qFr-oz-5eu" id="yQ2-pd-Uva"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="rSy-OA-1LI" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2149.5999999999999" y="131.78410794602701"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="U1L-Lo-Aem">

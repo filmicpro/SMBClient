@@ -56,12 +56,12 @@ public class SessionUploadTask: SessionTask {
         // ### confirm server is still available
 //        var smbSessionError: SMBSessionError? = nil
 //        self.smbSession.serialQueue.async {
-//            smbSessionError = self.smbSession.attemptConnection()
+            let smbSessionError = self.smbSession.attemptConnection()
 //        }
-//        if (smbSessionError != nil) {
-//            self.delegateError(.serverNotFound)
-//            return
-//        }
+        if (smbSessionError != nil) {
+            self.delegateError(.serverNotFound)
+            return
+        }
         
         // ### connect to share
         let (shareName, sharePathRaw) = self.smbSession.shareAndPathFrom(path: self.path)
@@ -112,8 +112,6 @@ public class SessionUploadTask: SessionTask {
             return
         }
         
-//        let bufferSize = self.data.count
-//        let buffer = [UInt8](repeating: 0, count: bufferSize)
         var bytes = [UInt8](self.data)
         let bufferSize = bytes.count
         
@@ -128,9 +126,6 @@ public class SessionUploadTask: SessionTask {
             
             let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
             
-//            let x = UnsafeBufferPointer(start: ptr, count: totalBytesWritten)
-//            let ptr = UnsafeMutableRawPointer(Unmanaged.passUnretained().toOpaque())
-//            let bufferPointer = UnsafeMutableRawPointer.ini
             bytesWritten = smb_fwrite(self.smbSession.smbSession, fileId, ptr, uploadBufferLimit)
             if bytesWritten < 0 {
                 fail()

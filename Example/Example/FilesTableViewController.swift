@@ -9,20 +9,6 @@
 import UIKit
 import SMBClient
 
-extension UIStoryboard {
-    class func mainStoryboard() -> UIStoryboard {
-        return UIStoryboard(name: "Main", bundle: Bundle.main)
-    }
-    
-    class func fileTableViewController(session: SMBSession, title: String, path: String = "/") -> FilesTableViewController {
-        let vc = mainStoryboard().instantiateViewController(withIdentifier: "FilesTableViewController") as! FilesTableViewController
-        vc.session = session
-        vc.path = path
-        vc.title = title
-        return vc
-    }
-}
-
 class FilesTableViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
@@ -123,10 +109,8 @@ extension FilesTableViewController: UITableViewDataSource {
         guard let currentPath = self.path else { return }
         
         if !file.isDirectory {
-            let task = self.session?.downloadTaskForFile(atPath: "\(currentPath)/\(file.name)", destinationPath: nil, delegate: nil)
-            if let t = task {
-                t.resume()
-            }
+            let vc = UIStoryboard.downloadProgressViewController(session: self.session!, filePath: "\(currentPath)/\(file.name)")
+            self.navigationController?.pushViewController(vc, animated: true)
             return
         }
         
@@ -142,7 +126,7 @@ extension FilesTableViewController: UITableViewDataSource {
             }
         }
         
-        let vc = UIStoryboard.fileTableViewController(session: self.session!, title: "depth", path: newPath)
+        let vc = UIStoryboard.fileTableViewController(session: self.session!, title: file.name, path: newPath)
         self.navigationController?.pushViewController(vc, animated: true)
 //        let svr = self.servers[indexPath.row]
 //

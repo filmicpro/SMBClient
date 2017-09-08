@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		C33E67351F5F153B00A55C29 /* FilesTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */; };
+		C3929C551F61F4020014B804 /* DownloadProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C541F61F4020014B804 /* DownloadProgressViewController.swift */; };
+		C3929C571F61F43F0014B804 /* Storyboard+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C561F61F43F0014B804 /* Storyboard+Extension.swift */; };
 		C3A03F051F58914000059EDA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A03F041F58914000059EDA /* AppDelegate.swift */; };
 		C3A03F071F58914000059EDA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A03F061F58914000059EDA /* ViewController.swift */; };
 		C3A03F0A1F58914000059EDA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C3A03F081F58914000059EDA /* Main.storyboard */; };
@@ -52,6 +54,8 @@
 
 /* Begin PBXFileReference section */
 		C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTableViewController.swift; sourceTree = "<group>"; };
+		C3929C541F61F4020014B804 /* DownloadProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgressViewController.swift; sourceTree = "<group>"; };
+		C3929C561F61F43F0014B804 /* Storyboard+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Storyboard+Extension.swift"; sourceTree = "<group>"; };
 		C3A03F011F58914000059EDA /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3A03F041F58914000059EDA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C3A03F061F58914000059EDA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -123,10 +127,12 @@
 				C3A03F041F58914000059EDA /* AppDelegate.swift */,
 				C3A03F061F58914000059EDA /* ViewController.swift */,
 				C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */,
+				C3929C541F61F4020014B804 /* DownloadProgressViewController.swift */,
 				C3A03F081F58914000059EDA /* Main.storyboard */,
 				C3A03F0B1F58914000059EDA /* Assets.xcassets */,
 				C3A03F0D1F58914000059EDA /* LaunchScreen.storyboard */,
 				C3A03F101F58914000059EDA /* Info.plist */,
+				C3929C561F61F43F0014B804 /* Storyboard+Extension.swift */,
 			);
 			path = Example;
 			sourceTree = "<group>";
@@ -295,6 +301,8 @@
 				C33E67351F5F153B00A55C29 /* FilesTableViewController.swift in Sources */,
 				C3A03F071F58914000059EDA /* ViewController.swift in Sources */,
 				C3A03F051F58914000059EDA /* AppDelegate.swift in Sources */,
+				C3929C571F61F43F0014B804 /* Storyboard+Extension.swift in Sources */,
+				C3929C551F61F4020014B804 /* DownloadProgressViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

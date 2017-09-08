@@ -43,7 +43,6 @@ public class SMBSession {
         return queue
     }()
     
-    
     public init() { }
     
 //    public func requestContents(ofShare: SMBShare)
@@ -99,10 +98,16 @@ public class SMBSession {
         if shareId == smb_tid.max {
             return []
         }
-        let directoryPath = filePath ?? "/"
-//        let directoryPath = filePath else { return [] }
-        let relativePath = directoryPath + "*" // wildcard to search
+        let directoryPath = filePath ?? ""
+        var relativePath = "/" + directoryPath // wildcard to search
+        if directoryPath.count > 0 {
+            relativePath = relativePath + "/*"
+        } else {
+            relativePath = relativePath + "*"
+        }
+        relativePath = relativePath.replacingOccurrences(of: "/", with: "\\")
         
+        // \SampleMedia\*
         let statList = smb_find(self.smbSession, shareId, relativePath.cString(using: .utf8))
         let listCount = smb_stat_list_count(statList)
         if listCount == 0 {
@@ -130,15 +135,6 @@ public class SMBSession {
         return results
     }
     
-//    private func shareNameFrom(path: String) -> String {
-//        let items = path.split(separator: "/")
-//        return items[0]!
-//    }
-//
-//    private func filePath(path: String) -> String {
-//
-//    }
-    
     internal func shareAndPathFrom(path: String) -> (String, String?) {
         let items = path.split(separator: "/")
         if items.count == 1 {
@@ -150,8 +146,8 @@ public class SMBSession {
     
     public func attemptConnection() -> SMBSessionError? {
         var err: SMBSessionError?
-        serialQueue.sync { [weak self] in
-            err = self?.attemptConnectionWithSessionPointer(smbSession: self!.smbSession)
+        serialQueue.sync {
+            err = self.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
         }
         
         if err != nil {
@@ -275,7 +271,7 @@ public class SMBSession {
 
 extension SMBSession: CustomDebugStringConvertible {
     public var debugDescription: String {
-        return "hostname : \(self.hostName)\nipAddress : \(self.ipAddress)\nuserName : \(self.userName)\nconnected : \(self.connected)"
+        return "hostname : \(String(describing: self.hostName))\nipAddress : \(String(describing: self.ipAddress))\nuserName : \(String(describing: self.userName))\nconnected : \(self.connected)"
     }
     
 }

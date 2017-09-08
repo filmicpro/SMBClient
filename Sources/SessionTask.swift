@@ -76,7 +76,7 @@ public class SessionTask {
         }
     }
     
-    internal func cancel() {
+    public func cancel() {
         if self.state != .running {
             return
         }

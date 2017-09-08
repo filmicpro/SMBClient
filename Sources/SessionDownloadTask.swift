@@ -18,6 +18,7 @@ public enum SessionDownloadError: Error {
     case fileNotFound
     case serverNotFound
     case downloadFailed
+    case invalidDestination
 }
 
 public protocol SessionDownloadTaskDelegate {
@@ -65,7 +66,7 @@ public class SessionDownloadTask: SessionTask {
     
     private var finalFilePathForDownloadedFile: URL? {
         guard let dest = self.destinationFilePath else { return nil }
-        let path = URL(fileURLWithPath: dest)
+        let path = URL(fileURLWithPath: dest.replacingOccurrences(of: "file://", with: ""))
         
         //
         var fileName = path.lastPathComponent
@@ -195,6 +196,10 @@ public class SessionDownloadTask: SessionTask {
             fileHandle?.write(data)
             fileHandle?.synchronizeFile()
             
+            if operation.isCancelled {
+                break
+            }
+            
             self.bytesReceived = self.bytesReceived! + UInt64(bytesRead)
             self.delegateQueue.async {
                 self.delegate?.downloadTask(totalBytesReceived: self.bytesReceived!, totalBytesExpected: self.bytesExpected!)
@@ -216,6 +221,7 @@ public class SessionDownloadTask: SessionTask {
         
         if operation.isCancelled || self.state != .running {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
+            delegateError(.cancelled)
             return
         }
         
@@ -225,7 +231,7 @@ public class SessionDownloadTask: SessionTask {
         do {
             try FileManager.default.moveItem(at: URL(fileURLWithPath: self.tempPathForTemoraryDestination), to: finalDestination)
         } catch {
-            delegateError(.downloadFailed)
+            delegateError(.invalidDestination)
         }
         self.state = .completed
         self.delegateQueue.async {
@@ -240,6 +246,30 @@ public class SessionDownloadTask: SessionTask {
         }
         self.taskOperation?.cancel()
         self.state = .cancelled
+        self.taskOperation = nil
+    }
+    
+    override public func cancel() {
+        if self.state != .running {
+            return
+        }
+        
+        let deleteFunc = {
+            do {
+                try FileManager.default.removeItem(atPath: self.tempPathForTemoraryDestination)
+            } catch {
+                // poop
+            }
+        }
+        let deleteOperation = BlockOperation(block: deleteFunc)
+        if let op = self.taskOperation {
+            deleteOperation.addDependency(op)
+        }
+        self.smbSession.taskQueue.addOperation(deleteOperation)
+        
+        self.taskOperation?.cancel()
+        self.state = .cancelled
+
         self.taskOperation = nil
     }
 }
