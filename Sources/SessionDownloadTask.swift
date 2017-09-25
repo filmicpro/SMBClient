@@ -35,23 +35,21 @@ public class SessionDownloadTask: SessionTask {
     var file: SMBFile?
 
     var tempPathForTemoraryDestination: String {
-        get {
-            let filename = self.hashForFilePath.appending("smb.data")
-            return NSTemporaryDirectory().appending(filename)
-        }
+        let filename = self.hashForFilePath.appending("smb.data")
+        return NSTemporaryDirectory().appending(filename)
     }
 
     var hashForFilePath: String {
-        get {
-            let filepath = self.sourceFilePath.lowercased()
-            return "\(filepath.hashValue)"
-        }
-
+        let filepath = self.sourceFilePath.lowercased()
+        return "\(filepath.hashValue)"
     }
 
     public var delegate: SessionDownloadTaskDelegate?
 
-    public init(session: SMBSession, sourceFilePath: String, destinationFilePath: String? = nil, delegate: SessionDownloadTaskDelegate? = nil) {
+    public init(session: SMBSession,
+                sourceFilePath: String,
+                destinationFilePath: String? = nil,
+                delegate: SessionDownloadTaskDelegate? = nil) {
         self.sourceFilePath = sourceFilePath
         self.destinationFilePath = destinationFilePath
         self.delegate = delegate
@@ -87,7 +85,7 @@ public class SessionDownloadTask: SessionTask {
         var index = 0
         while FileManager.default.fileExists(atPath: newFilePath.absoluteString) {
             let fileNameURL = URL(fileURLWithPath: fileName)
-            index = index + 1
+            index += 1
             newFileName = "\(fileNameURL.deletingPathExtension())-\(index).\(fileNameURL.pathExtension)"
             newFilePath = folderPath.appendingPathComponent(newFileName)
         }
@@ -107,7 +105,7 @@ public class SessionDownloadTask: SessionTask {
 
         self.smbSession = smb_session_new()
 
-        var connectError: SMBSessionError? = nil
+        var connectError: SMBSession.SMBSessionError? = nil
         self.session.serialQueue.sync {
             connectError = self.session.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
         }
@@ -171,7 +169,8 @@ public class SessionDownloadTask: SessionTask {
         path?.deleteLastPathComponent()
 
         do {
-            try FileManager.default.createDirectory(atPath: path!.absoluteString, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(atPath: path!.absoluteString,
+                                                    withIntermediateDirectories: true, attributes: nil)
         } catch {
             // return error TODO
         }
@@ -205,7 +204,7 @@ public class SessionDownloadTask: SessionTask {
 
         repeat {
             bytesRead = smb_fread(self.smbSession, fileId, buffer, bufferSize)
-            if (bytesRead < 0) {
+            if bytesRead < 0 {
                 self.fail()
                 delegateError(.downloadFailed)
                 break
@@ -221,14 +220,16 @@ public class SessionDownloadTask: SessionTask {
 
             self.bytesReceived = self.bytesReceived! + UInt64(bytesRead)
             self.delegateQueue.async {
-                self.delegate?.downloadTask(totalBytesReceived: self.bytesReceived!, totalBytesExpected: self.bytesExpected!)
+                self.delegate?.downloadTask(totalBytesReceived: self.bytesReceived!,
+                                            totalBytesExpected: self.bytesExpected!)
             }
         } while (bytesRead > 0)
 
         // Set the modification date to match the one on the SMB device so we can compare thetwo at a later date
         do {
             if let modAt = file.modifiedAt {
-                try FileManager.default.setAttributes([FileAttributeKey.modificationDate: modAt], ofItemAtPath: self.tempPathForTemoraryDestination)
+                try FileManager.default.setAttributes([FileAttributeKey.modificationDate: modAt],
+                                                      ofItemAtPath: self.tempPathForTemoraryDestination)
             }
         } catch {
             // updating the timestamp doesn't matter that much
@@ -248,7 +249,8 @@ public class SessionDownloadTask: SessionTask {
         guard let finalDestination = self.finalFilePathForDownloadedFile else { return }
 
         do {
-            try FileManager.default.moveItem(at: URL(fileURLWithPath: self.tempPathForTemoraryDestination), to: finalDestination)
+            let url = URL(fileURLWithPath: self.tempPathForTemoraryDestination)
+            try FileManager.default.moveItem(at: url, to: finalDestination)
         } catch {
             delegateError(.invalidDestination)
         }

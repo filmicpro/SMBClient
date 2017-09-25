@@ -31,22 +31,25 @@ public class NetBIOSNameService {
         netbios_ns_destroy(self.nameService)
     }
 
-    private var onAdded: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
+    private var onAdded: DiscoverCallback? = { (nameService: UnsafeMutableRawPointer?,
+                                                netBiosNSEntry: OpaquePointer?) -> Void in
         if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
             // https://stackoverflow.com/questions/33551191/swift-pass-data-to-a-closure-that-captures-context
-            if let ptr = p_opaque {
-                // if EXC_BAD_ACCESS is thrown here it's because 'this' instance of NetBIOSNameService has been deallocated
+            if let nameServicePtr = nameService {
+                // if EXC_BAD_ACCESS is thrown here it's because
+                // 'this' instance of NetBIOSNameService has been deallocated
                 // while netbios_ns_discover_start is still firing callbacks
-                let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(ptr).takeUnretainedValue()
+                let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(nameServicePtr).takeUnretainedValue()
                 mySelf.delegate?.added(entry: ent)
             }
         }
     }
 
-    private var onRemoved: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
+    private var onRemoved: DiscoverCallback? = { (nameService: UnsafeMutableRawPointer?,
+                                                  netBiosNSEntry: OpaquePointer?) -> Void in
         if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
-            guard let ptr = p_opaque else { return }
-            let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(ptr).takeUnretainedValue()
+            guard let nameServicePtr = nameService else { return }
+            let mySelf = Unmanaged<NetBIOSNameService>.fromOpaque(nameServicePtr).takeUnretainedValue()
             mySelf.delegate?.removed(entry: ent)
         }
     }
@@ -77,7 +80,9 @@ public class NetBIOSNameService {
     public func startDiscovery(withTimeout timeout: TimeInterval) {
         let blockPointer = bridge(obj: self)
 
-        var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer, pf_on_entry_added: self.onAdded, pf_on_entry_removed: self.onRemoved)
+        var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer,
+                                               pf_on_entry_added: self.onAdded,
+                                               pf_on_entry_removed: self.onRemoved)
         netbios_ns_discover_start(self.nameService, UInt32(timeout), &cb)
     }
 

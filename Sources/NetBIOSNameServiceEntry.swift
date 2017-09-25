@@ -89,6 +89,6 @@ extension NetBIOSNameServiceEntry: Hashable {
 
 extension NetBIOSNameServiceEntry: Equatable { }
 
-public func ==(lhs: NetBIOSNameServiceEntry, rhs: NetBIOSNameServiceEntry) -> Bool {
+public func == (lhs: NetBIOSNameServiceEntry, rhs: NetBIOSNameServiceEntry) -> Bool {
     return lhs.hashValue == rhs.hashValue
 }

@@ -13,7 +13,7 @@ extension UIStoryboard {
     class func mainStoryboard() -> UIStoryboard {
         return UIStoryboard(name: "Main", bundle: Bundle.main)
     }
-    
+
     class func fileTableViewController(session: SMBSession, title: String, path: String = "/") -> FilesTableViewController {
         let vc = mainStoryboard().instantiateViewController(withIdentifier: "FilesTableViewController") as! FilesTableViewController
         vc.session = session
@@ -21,7 +21,7 @@ extension UIStoryboard {
         vc.title = title
         return vc
     }
-    
+
     class func downloadProgressViewController(session: SMBSession, filePath: String) -> DownloadProgressViewController {
         let vc = mainStoryboard().instantiateViewController(withIdentifier: "DownloadProgressViewController") as! DownloadProgressViewController
         vc.session = session
@@ -29,4 +29,3 @@ extension UIStoryboard {
         return vc
     }
 }
-

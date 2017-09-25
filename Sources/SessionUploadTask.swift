@@ -10,19 +10,10 @@ import Foundation
 
 import libdsm
 
-public enum SessionUploadError: Error {
-    case cancelled
-    case connectionFailed
-    case fileNotFound
-    case serverNotFound
-    case directoryDownloaded
-    case uploadFailed
-}
-
 public protocol SessionUploadTaskDelegate {
     func uploadTask(didFinishUploading: SessionUploadTask)
     func uploadTask(_ task: SessionUploadTask, totalBytesSent: UInt64, totalBytesExpected: UInt64)
-    func uploadTask(didCompleteWithError: SessionUploadError)
+    func uploadTask(didCompleteWithError: SessionUploadTask.SessionUploadError)
 }
 
 public class SessionUploadTask: SessionTask {
@@ -31,14 +22,18 @@ public class SessionUploadTask: SessionTask {
     var delegate: SessionUploadTaskDelegate?
     var file: SMBFile?
 
-    public init(session: SMBSession, delegateQueue: DispatchQueue = DispatchQueue.main, path: String, data: Data, delegate: SessionUploadTaskDelegate? = nil) {
+    public init(session: SMBSession,
+                delegateQueue: DispatchQueue = DispatchQueue.main,
+                path: String,
+                data: Data,
+                delegate: SessionUploadTaskDelegate? = nil) {
         self.path = path
         self.data = data
         self.delegate = delegate
         super.init(session: session, delegateQueue: delegateQueue)
     }
 
-    func delegateError(_ error: SessionUploadError) {
+    func delegateError(_ error: SessionUploadTask.SessionUploadError) {
         self.delegateQueue.async {
             self.delegate?.uploadTask(didCompleteWithError: error)
         }
@@ -55,9 +50,9 @@ public class SessionUploadTask: SessionTask {
         // ### confirm server is still available
 //        var smbSessionError: SMBSessionError? = nil
 //        self.smbSession.serialQueue.async {
-            let smbSessionError = self.session.attemptConnection()
+        let smbSessionError = self.session.attemptConnection()
 //        }
-        if (smbSessionError != nil) {
+        if smbSessionError != nil {
             self.delegateError(.serverNotFound)
             return
         }
@@ -96,7 +91,13 @@ public class SessionUploadTask: SessionTask {
             }
         }
 
-        let SMB_MOD_RW = SMB_MOD_READ | SMB_MOD_WRITE | SMB_MOD_APPEND | SMB_MOD_READ_EXT + SMB_MOD_WRITE_EXT | SMB_MOD_READ_ATTR | SMB_MOD_WRITE_ATTR | SMB_MOD_READ_CTL
+        let SMB_MOD_RW = SMB_MOD_READ |
+            SMB_MOD_WRITE |
+            SMB_MOD_APPEND |
+            SMB_MOD_READ_EXT + SMB_MOD_WRITE_EXT |
+            SMB_MOD_READ_ATTR |
+            SMB_MOD_WRITE_ATTR |
+            SMB_MOD_READ_CTL
         // ### open the file handle
         smb_fopen(self.session.smbSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
         if fileId == 0 {
@@ -118,7 +119,7 @@ public class SessionUploadTask: SessionTask {
         var totalBytesWritten = 0
 
         repeat {
-            if (bufferSize - totalBytesWritten < uploadBufferLimit) {
+            if bufferSize - totalBytesWritten < uploadBufferLimit {
                 uploadBufferLimit = bufferSize - totalBytesWritten
             }
 
@@ -144,4 +145,15 @@ public class SessionUploadTask: SessionTask {
         }
     }
 
+}
+
+extension SessionUploadTask {
+    public enum SessionUploadError: Error {
+        case cancelled
+        case connectionFailed
+        case fileNotFound
+        case serverNotFound
+        case directoryDownloaded
+        case uploadFailed
+    }
 }
