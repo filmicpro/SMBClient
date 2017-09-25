@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  ServerDiscoveryViewController.swift
 //  Example
 //
 //  Created by Seth Faxon on 8/31/17.
@@ -9,9 +9,9 @@
 import UIKit
 import SMBClient
 
-class ViewController: UIViewController {
+class ServerDiscoveryViewController: UIViewController {
 
-    let s = NetBIOSNameService()
+    let biosNameService = NetBIOSNameService()
 
     @IBOutlet weak var tableView: UITableView!
 
@@ -30,9 +30,10 @@ class ViewController: UIViewController {
         self.tableView.delegate = self
         self.tableView.dataSource = self
 
-        s.delegate = self
-        s.startDiscovery(withTimeout: 3000)
+        biosNameService.delegate = self
+        biosNameService.startDiscovery(withTimeout: 3000)
 
+        self.title = "Servers"
     }
 
     override func didReceiveMemoryWarning() {
@@ -44,28 +45,27 @@ class ViewController: UIViewController {
         if let dest = segue.destination as? FilesTableViewController {
             dest.session = sender as? SMBSession
             dest.path = "/"
-
         }
     }
 
 }
 
-extension ViewController: NetBIOSNameServiceDelegate {
+extension ServerDiscoveryViewController: NetBIOSNameServiceDelegate {
     func added(entry: NetBIOSNameServiceEntry) {
-        print(entry)
+        print("ServerDiscoveryViewController added: \(entry)")
         self.servers.append(entry)
     }
     func removed(entry: NetBIOSNameServiceEntry) {
-        print("removed - \(entry)")
+        print("ServerDiscoveryViewController removed - \(entry)")
         self.servers = self.servers.filter { $0 != entry }
     }
 }
 
-extension ViewController: UITableViewDelegate {
+extension ServerDiscoveryViewController: UITableViewDelegate {
 
 }
 
-extension ViewController: UITableViewDataSource {
+extension ServerDiscoveryViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -89,7 +89,8 @@ extension ViewController: UITableViewDataSource {
         sess.hostName = svr.name
         sess.ipAddress = svr.ipAddressString
 
-        let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")
+        let vc = UIStoryboard.volumeListViewController(session: sess)
+//        let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")
         self.navigationController?.pushViewController(vc, animated: true)
 
         // self.performSegue(withIdentifier: "showFiles", sender: sess)

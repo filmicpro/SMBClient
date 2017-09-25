@@ -28,4 +28,10 @@ extension UIStoryboard {
         vc.filePath = filePath
         return vc
     }
+
+    class func volumeListViewController(session: SMBSession) -> VolumeListViewController {
+        let vc = mainStoryboard().instantiateViewController(withIdentifier: "VolumeListViewController") as! VolumeListViewController
+        vc.session = session
+        return vc
+    }
 }

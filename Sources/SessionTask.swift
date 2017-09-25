@@ -10,15 +10,6 @@ import Foundation
 import UIKit
 import libdsm
 
-public enum SessionTaskState {
-    case ready
-    case running
-    case suspended
-    case cancelled
-    case completed
-    case failed
-}
-
 public class SessionTask {
     var session: SMBSession
     var delegateQueue: DispatchQueue
@@ -104,4 +95,15 @@ public class SessionTask {
         self.state = .running
     }
 
+}
+
+extension SessionTask {
+    public enum SessionTaskState {
+        case ready
+        case running
+        case suspended
+        case cancelled
+        case completed
+        case failed
+    }
 }

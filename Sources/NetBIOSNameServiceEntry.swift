@@ -61,7 +61,6 @@ public struct NetBIOSNameServiceEntry {
         self.group = String(cString: groupBits)
         self.serviceType = serviceType
         self.ipAddress = ipAddressBits
-
     }
 
     public var ipAddressString: String {

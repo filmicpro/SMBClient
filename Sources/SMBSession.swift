@@ -42,6 +42,65 @@ public class SMBSession {
 //    public func requestContents(ofShare: SMBShare)
 //    public func requestContents(ofDirectory: SMBDirectory)
 
+    public func requestVolumes() -> Result<[SMBVolume]> {
+        let conError = self.attemptConnection()
+        // switch result/error
+        if let error = conError {
+            return Result.failure(error)
+        }
+
+        var list: smb_share_list? = smb_share_list.allocate(capacity: 1)
+
+        let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        shareCount.pointee = 0
+
+        smb_share_get_list(self.smbSession, &list, shareCount)
+
+        if shareCount.pointee == 0 {
+            return Result.success([])
+        }
+        var results: [SMBVolume] = []
+
+        var i = 0
+        while i <= shareCount.pointee {
+            guard let shareNameCString = smb_share_list_at(list!, i) else {
+                i += 1
+                continue
+            }
+
+            var shareName = String(cString: shareNameCString)
+            // skip system shares suffixed by '$'
+            if shareName.characters.last == "$" {
+                i += 1
+                continue
+            }
+
+            let f = SMBVolume(name: shareName, session: self)
+            results.append(f)
+
+            i += 1
+        }
+        return Result.success(results)
+    }
+
+    public func requestVolumes(completionQueue: DispatchQueue = DispatchQueue.main,
+                               completion: @escaping (_ result: Result<[SMBVolume]>) -> Void) {
+        let operation = BlockOperation()
+
+        let blockOperation = {
+            if operation.isCancelled {
+                return
+            }
+            let requestResult = self.requestVolumes()
+
+            completionQueue.async {
+                completion(requestResult)
+            }
+        }
+        operation.addExecutionBlock(blockOperation)
+        self.dataQueue.addOperation(operation)
+    }
+
     public func requestContents(atFilePath path: String) -> Result<[SMBFile]> {
         let conError = self.attemptConnection()
         // switch result/error
