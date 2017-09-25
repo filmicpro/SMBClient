@@ -48,16 +48,6 @@ class VolumeListViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
 extension VolumeListViewController: UITableViewDataSource {
@@ -84,9 +74,8 @@ extension VolumeListViewController: UITableViewDelegate {
         self.tableView.deselectRow(at: indexPath, animated: true)
 
         let volume = self.volumes[indexPath.row]
-        let path = "/\(volume.name)"
 
-        let vc = UIStoryboard.fileTableViewController(session: self.session!, title: volume.name, path: path)
+        let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: volume, title: volume.name, path: "/")
         self.navigationController?.pushViewController(vc, animated: true)
     }
 }

@@ -13,8 +13,9 @@ class FilesTableViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
 
     var session: SMBSession?
+    var volume: SMBVolume?
     var path: String?
-    var files: [SMBFile]? {
+    var items: [SMBItem]? {
         didSet {
             self.tableView.reloadData()
         }
@@ -29,29 +30,20 @@ class FilesTableViewController: UIViewController {
 
         guard let session = self.session else { return }
         guard let path = self.path else { return }
+        guard let volume = self.volume else { return }
 
         self.title = "Loading..."
 
-        session.requestContentsOfDirectory(atPath: path) { (result) in
+        session.requestItems(fromVolume: volume, atPath: path) { (result) in
             self.title = path
             switch result {
-            case .success(let files):
-                self.files = files
+            case .success(let items):
+                self.items = items
             case .failure(let error):
-                self.files = []
-                print("error requesting files: \(error)")
+                self.items = []
+                print("FilesTableViewController failed to request files: \(error)")
             }
         }
-
-        // synchronous way to list files
-//        switch session.requestContents(atFilePath: path) {
-//        case .success(let files):
-//            self.files = files
-//        case .failure(let error):
-//            self.files = []
-//            print("error requesting files: \(error)")
-//        }
-//        self.files = session.requestContents(atFilePath: path)
     }
 
     override func didReceiveMemoryWarning() {
@@ -69,16 +61,6 @@ class FilesTableViewController: UIViewController {
         let uploadTask = session.uploadTaskForFile(atPath: uploadPath, data: data, delegate: self)
         uploadTask.resume()
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
 
@@ -107,46 +89,53 @@ extension FilesTableViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if let files = self.files {
-            return files.count
+        if let items = self.items {
+            return items.count
         }
         return 0
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        guard let files = self.files else { return cell }
-        let file = files[indexPath.row]
-        cell.textLabel?.text = file.name
-        cell.detailTextLabel?.text = file.isDirectory ? "directory" : ""
+        guard let items = self.items else { return cell }
+        let item = items[indexPath.row]
+        switch  item {
+        case .directory(let d):
+            cell.textLabel?.text = d.name
+            cell.detailTextLabel?.text = "directory"
+        case .file(let file):
+            cell.textLabel?.text = file.name
+            cell.detailTextLabel?.text = "filesize: \(file.fileSize)"
+        }
 
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let file = self.files?[indexPath.row] else { return }
+        guard let item = self.items?[indexPath.row] else { return }
         guard let currentPath = self.path else { return }
-
-        if !file.isDirectory {
-            let vc = UIStoryboard.downloadProgressViewController(session: self.session!, filePath: "\(currentPath)/\(file.name)")
-            self.navigationController?.pushViewController(vc, animated: true)
-            return
-        }
-
-        let newPath: String
-        if currentPath != "/" {
-            newPath = "\(currentPath)/\(file.name)"
-        } else {
-            if currentPath == "/" {
-                newPath = "/\(file.name)"
-            } else {
-                newPath = "\(currentPath)/\(file.name)"
-            }
-        }
 
         self.tableView.deselectRow(at: indexPath, animated: true)
 
-        let vc = UIStoryboard.fileTableViewController(session: self.session!, title: file.name, path: newPath)
-        self.navigationController?.pushViewController(vc, animated: true)
+        switch item {
+        case .file(let file):
+            let vc = UIStoryboard.downloadProgressViewController(session: self.session!, filePath: "\(currentPath)/\(file.name)")
+            self.navigationController?.pushViewController(vc, animated: true)
+            return
+        case .directory(let directory):
+            let newPath: String
+            if currentPath != "/" {
+                newPath = "\(currentPath)/\(directory.name)"
+            } else {
+                if currentPath == "/" {
+                    newPath = "/\(directory.name)"
+                } else {
+                    newPath = "\(currentPath)/\(directory.name)"
+                }
+            }
+
+            let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: self.volume!, title: directory.name, path: newPath)
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
     }
 }

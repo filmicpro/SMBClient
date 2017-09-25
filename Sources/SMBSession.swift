@@ -39,7 +39,7 @@ public class SMBSession {
 
     public init() { }
 
-//    public func requestContents(ofShare: SMBShare)
+//    public func requestContents(ofShare: SMBVolume)
 //    public func requestContents(ofDirectory: SMBDirectory)
 
     public func requestVolumes() -> Result<[SMBVolume]> {
@@ -101,59 +101,21 @@ public class SMBSession {
         self.dataQueue.addOperation(operation)
     }
 
-    public func requestContents(atFilePath path: String) -> Result<[SMBFile]> {
+    public func requestItems(fromVolume volume: SMBVolume, atPath path: String) -> Result<[SMBItem]> {
         let conError = self.attemptConnection()
         // switch result/error
         if let error = conError {
             return Result.failure(error)
         }
 
-        if path.characters.count == 0 || path == "/" {
-            var list: smb_share_list? = smb_share_list.allocate(capacity: 1)
-
-            let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
-            shareCount.pointee = 0
-
-            smb_share_get_list(self.smbSession, &list, shareCount)
-
-            if shareCount.pointee == 0 {
-                return Result.success([])
-            }
-            var results: [SMBFile] = []
-
-            var i = 0
-            while i <= shareCount.pointee {
-                guard let shareNameCString = smb_share_list_at(list!, i) else {
-                    i += 1
-                    continue
-                }
-
-                var shareName = String(cString: shareNameCString)
-                // skip system shares suffixed by '$'
-                if shareName.characters.last == "$" {
-                    i += 1
-                    continue
-                }
-
-                if let f = SMBFile(name: shareName, session: self) {
-                    results.append(f)
-                }
-
-                i += 1
-            }
-            return Result.success(results)
-        }
-
-        let (shareName, filePath) = shareAndPathFrom(path: path)
-
         var shareId: UInt16 = smb_tid.max
-        smb_tree_connect(self.smbSession, shareName.cString(using: .utf8), &shareId)
+        smb_tree_connect(self.smbSession, volume.name.cString(using: .utf8), &shareId)
         if shareId == smb_tid.max {
             return Result.success([])
         }
-        let directoryPath = filePath ?? ""
-        var relativePath = "/" + directoryPath // wildcard to search
-        if directoryPath.count > 0 {
+
+        var relativePath = path // wildcard to search
+        if relativePath.count > 0 {
             relativePath += "/*"
         } else {
             relativePath += "*"
@@ -167,19 +129,19 @@ public class SMBSession {
             return Result.success([])
         }
 
-        var results: [SMBFile] = []
+        var results: [SMBItem] = []
 
         var i = 0
         while i < listCount {
             let item = smb_stat_list_at(statList, i)
             guard let stat = item else { i = i + 1; continue }
-            guard let file = SMBFile(stat: stat, session: self, parentDirectoryFilePath: directoryPath) else {
+            guard let smbItem = SMBItem(stat: stat, session: self, parentDirectoryFilePath: relativePath) else {
                 i += 1
                 continue
             }
 
-            if file.name.first != "." {
-                results.append(file)
+            if smbItem.name.first != "." {
+                results.append(smbItem)
             }
 
             i += 1
@@ -188,32 +150,22 @@ public class SMBSession {
         return Result.success(results)
     }
 
-    public func requestContentsOfDirectory(atPath path: String,
-                                           completionQueue: DispatchQueue = DispatchQueue.main,
-                                           completion: @escaping (_ result: Result<[SMBFile]>) -> Void) {
+    public func requestItems(fromVolume volume: SMBVolume,
+                             atPath path: String,
+                             completionQueue: DispatchQueue = DispatchQueue.main,
+                             completion: @escaping (_ result: Result<[SMBItem]>) -> Void) {
         let operation = BlockOperation()
-
         let blockOperation = {
             if operation.isCancelled {
                 return
             }
-            let requestResult = self.requestContents(atFilePath: path)
-
+            let requestResult = self.requestItems(fromVolume: volume, atPath: path)
             completionQueue.async {
                 completion(requestResult)
             }
         }
         operation.addExecutionBlock(blockOperation)
         self.dataQueue.addOperation(operation)
-    }
-
-    internal func shareAndPathFrom(path: String) -> (String, String?) {
-        let items = path.split(separator: "/")
-        if items.count == 1 {
-            return (String(items[0]), nil)
-        }
-        let filePath = items[1...].joined(separator: "\\")
-        return (String(items[0]), filePath)
     }
 
     public func attemptConnection() -> SMBSessionError? {

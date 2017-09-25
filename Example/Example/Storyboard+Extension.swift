@@ -14,9 +14,10 @@ extension UIStoryboard {
         return UIStoryboard(name: "Main", bundle: Bundle.main)
     }
 
-    class func fileTableViewController(session: SMBSession, title: String, path: String = "/") -> FilesTableViewController {
+    class func fileTableViewController(session: SMBSession, volume: SMBVolume, title: String, path: String = "/") -> FilesTableViewController {
         let vc = mainStoryboard().instantiateViewController(withIdentifier: "FilesTableViewController") as! FilesTableViewController
         vc.session = session
+        vc.volume = volume
         vc.path = path
         vc.title = title
         return vc

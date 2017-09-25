@@ -128,8 +128,8 @@
 			children = (
 				C3A03F041F58914000059EDA /* AppDelegate.swift */,
 				C3A03F061F58914000059EDA /* ServerDiscoveryViewController.swift */,
-				C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */,
 				C3BAD9771F799C1E009316F4 /* VolumeListViewController.swift */,
+				C33E67341F5F153B00A55C29 /* FilesTableViewController.swift */,
 				C3929C541F61F4020014B804 /* DownloadProgressViewController.swift */,
 				C3A03F081F58914000059EDA /* Main.storyboard */,
 				C3A03F0B1F58914000059EDA /* Assets.xcassets */,
