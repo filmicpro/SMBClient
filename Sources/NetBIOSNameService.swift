@@ -17,20 +17,20 @@ public protocol NetBIOSNameServiceDelegate {
 }
 
 public class NetBIOSNameService {
-    
+
     private let nameService = netbios_ns_new()
-    
+
     public var delegate: NetBIOSNameServiceDelegate?
-    
+
     public init() { }
-    
+
     deinit {
         netbios_ns_discover_stop(self.nameService)
         self.onAdded = nil
         self.onRemoved = nil
         netbios_ns_destroy(self.nameService)
     }
-    
+
     private var onAdded: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
         if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
             // https://stackoverflow.com/questions/33551191/swift-pass-data-to-a-closure-that-captures-context
@@ -42,7 +42,7 @@ public class NetBIOSNameService {
             }
         }
     }
-    
+
     private var onRemoved: DiscoverCallback? = { (p_opaque: UnsafeMutableRawPointer?, netBiosNSEntry: OpaquePointer?) -> Void in
         if let ent = NetBIOSNameServiceEntry(cEntry: netBiosNSEntry) {
             guard let ptr = p_opaque else { return }
@@ -50,7 +50,7 @@ public class NetBIOSNameService {
             mySelf.delegate?.removed(entry: ent)
         }
     }
-    
+
     // will return empty string if host is present, unreachable host returns nil
     public func networkNameFor(ipAddress: String) -> String? {
         let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
@@ -60,7 +60,7 @@ public class NetBIOSNameService {
         guard let name = nameChar else { return nil }
         return String(cString: name)
     }
-    
+
     public func resolveIPAddress(forName name: String, ofType type: NetBIOSNameServiceType) -> String? {
         let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
         let nameCString = name.cString(using: .utf8)
@@ -68,20 +68,17 @@ public class NetBIOSNameService {
         if result < 0 {
             return nil
         }
-        
+
         let addressCString = inet_ntoa(addr.pointee)
         guard let addressCStringValue = addressCString else { return nil }
         return String(cString: addressCStringValue)
     }
-    
+
     public func startDiscovery(withTimeout timeout: TimeInterval) {
         let blockPointer = bridge(obj: self)
-        
+
         var cb = netbios_ns_discover_callbacks(p_opaque: blockPointer, pf_on_entry_added: self.onAdded, pf_on_entry_removed: self.onRemoved)
         netbios_ns_discover_start(self.nameService, UInt32(timeout), &cb)
     }
-    
+
 }
-
-
-

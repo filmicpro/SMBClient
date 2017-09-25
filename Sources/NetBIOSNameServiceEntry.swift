@@ -13,7 +13,7 @@ public enum NetBIOSNameServiceType: Int8 {
     case messenger
     case fileServer
     case domainMaster
-    
+
     init?(fromNetBIOSNSEntryType: Int8) {
         switch Int32(fromNetBIOSNSEntryType) {
         case NETBIOS_WORKSTATION:
@@ -28,7 +28,7 @@ public enum NetBIOSNameServiceType: Int8 {
             return nil
         }
     }
-    
+
     internal var typeValue: Int8 {
         switch self {
         case .workstation:
@@ -48,7 +48,7 @@ public struct NetBIOSNameServiceEntry {
     public let group: String
     public let serviceType: NetBIOSNameServiceType
     public let ipAddress: UInt32
-    
+
     init?(cEntry: OpaquePointer?) {
         guard let entry = cEntry else { return nil }
         guard let nameBits = netbios_ns_entry_name(entry) else { return nil } // UnsafePointer<Int8>
@@ -56,21 +56,21 @@ public struct NetBIOSNameServiceEntry {
         let serviceTypeBits = netbios_ns_entry_type(entry) // Int8
         guard let serviceType = NetBIOSNameServiceType.init(fromNetBIOSNSEntryType: serviceTypeBits) else { return nil }
         let ipAddressBits = netbios_ns_entry_ip(entry) // Uint32
-        
+
         self.name = String(cString: nameBits)
         self.group = String(cString: groupBits)
         self.serviceType = serviceType
         self.ipAddress = ipAddressBits
-        
+
     }
-    
+
     public var ipAddressString: String {
         var bytes = [UInt32]()
         bytes.append(self.ipAddress & 0xFF)
         bytes.append((self.ipAddress >> 8) & 0xFF)
         bytes.append((self.ipAddress >> 16) & 0xFF)
         bytes.append((self.ipAddress >> 24) & 0xFF)
-        
+
         return "\(bytes[0]).\(bytes[1]).\(bytes[2]).\(bytes[3])"
     }
 }
