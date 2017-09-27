@@ -76,14 +76,9 @@ extension ServerDiscoveryViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let svr = self.servers[indexPath.row]
-
         let smbServer = SMBServer(hostname: svr.name, ipAddress: svr.ipAddress)
-        let sess = SMBSession(server: smbServer)
 
-        let vc = UIStoryboard.volumeListViewController(session: sess)
-//        let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")
+        let vc = UIStoryboard.authViewController(server: smbServer)
         self.navigationController?.pushViewController(vc, animated: true)
-
-        // self.performSegue(withIdentifier: "showFiles", sender: sess)
     }
 }

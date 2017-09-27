@@ -35,4 +35,10 @@ extension UIStoryboard {
         vc.session = session
         return vc
     }
+
+    class func authViewController(server: SMBServer) -> AuthViewController {
+        let vc = mainStoryboard().instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
+        vc.server = server
+        return vc
+    }
 }

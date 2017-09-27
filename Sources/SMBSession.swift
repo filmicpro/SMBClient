@@ -11,7 +11,7 @@ import libdsm
 public class SMBSession {
     internal var rawSession = smb_session_new() {
         didSet {
-            print("rawSession updated: \(rawSession)")
+            print("rawSession updated: \(String(describing: rawSession))")
         }
     }
     internal var serialQueue = DispatchQueue(label: "SMBSession")
