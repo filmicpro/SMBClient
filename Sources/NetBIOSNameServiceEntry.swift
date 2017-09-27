@@ -72,6 +72,10 @@ public struct NetBIOSNameServiceEntry {
 
         return "\(bytes[0]).\(bytes[1]).\(bytes[2]).\(bytes[3])"
     }
+
+    public var smbServer: SMBServer {
+        return SMBServer(hostname: self.name, ipAddress: self.ipAddress)
+    }
 }
 
 extension NetBIOSNameServiceEntry: CustomStringConvertible {

@@ -58,10 +58,10 @@ public class SessionUploadTask: SessionTask {
         }
 
         // ### connect to share
-        let (shareName, sharePathRaw) = self.session.shareAndPathFrom(path: self.path)
-        guard let sharePath = sharePathRaw else { return } // TODO: error?
+        let (shareName, sharePath) = ("foo", "TODO") //  self.session.shareAndPathFrom(path: self.path)
+//        guard let sharePath = sharePathRaw else { return } // TODO: error?
         let shareCString = shareName.cString(using: .utf8)
-        smb_tree_connect(self.session.smbSession, shareCString, &treeId)
+        smb_tree_connect(self.session.rawSession, shareCString, &treeId)
         if treeId == 0 {
             self.delegateError(.connectionFailed)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
@@ -99,7 +99,7 @@ public class SessionUploadTask: SessionTask {
             SMB_MOD_WRITE_ATTR |
             SMB_MOD_READ_CTL
         // ### open the file handle
-        smb_fopen(self.session.smbSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
+        smb_fopen(self.session.rawSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
         if fileId == 0 {
             self.delegateError(.fileNotFound)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
@@ -125,7 +125,7 @@ public class SessionUploadTask: SessionTask {
 
             let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
 
-            bytesWritten = smb_fwrite(self.session.smbSession, fileId, ptr, uploadBufferLimit)
+            bytesWritten = smb_fwrite(self.session.rawSession, fileId, ptr, uploadBufferLimit)
             if bytesWritten < 0 {
                 fail()
                 self.delegateError(.uploadFailed)

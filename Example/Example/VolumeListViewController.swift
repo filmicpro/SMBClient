@@ -31,7 +31,7 @@ class VolumeListViewController: UIViewController {
         self.title = "Loading..."
 
         if let session = self.session {
-            self.title = session.hostName
+            self.title = session.server.hostname
             session.requestVolumes(completion: { (result) in
                 switch result {
                 case .success(let volumes):

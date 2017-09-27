@@ -12,6 +12,8 @@
 		C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494F1F59D2E600A0EB61 /* SMBSession.swift */; };
 		C33449521F59E67900A0EB61 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C33449511F59E67900A0EB61 /* libiconv.tbd */; };
 		C33449541F59FB6000A0EB61 /* SMBFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33449531F59FB6000A0EB61 /* SMBFile.swift */; };
+		C36B1D2A1F79CD1600819DE1 /* SMBServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36B1D291F79CD1600819DE1 /* SMBServer.swift */; };
+		C36B1D611F7B025A00819DE1 /* SMBServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */; };
 		C36F2BA91F5793B5008B96C4 /* SMBClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */; };
 		C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */; };
 		C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BA21F5793B5008B96C4 /* SMBClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -43,6 +45,8 @@
 		C334494F1F59D2E600A0EB61 /* SMBSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBSession.swift; sourceTree = "<group>"; };
 		C33449511F59E67900A0EB61 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		C33449531F59FB6000A0EB61 /* SMBFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBFile.swift; sourceTree = "<group>"; };
+		C36B1D291F79CD1600819DE1 /* SMBServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBServer.swift; sourceTree = "<group>"; };
+		C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBServerTests.swift; sourceTree = "<group>"; };
 		C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SMBClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C36F2BA21F5793B5008B96C4 /* SMBClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMBClient.h; sourceTree = "<group>"; };
 		C36F2BA31F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -110,6 +114,7 @@
 				C36F2BCF1F579683008B96C4 /* Support Files */,
 				C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */,
 				C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */,
+				C36B1D291F79CD1600819DE1 /* SMBServer.swift */,
 				C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */,
 				C334494F1F59D2E600A0EB61 /* SMBSession.swift */,
 				C3929C4E1F5F302D0014B804 /* SessionTask.swift */,
@@ -128,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */,
+				C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */,
 				C36F2BAF1F5793B5008B96C4 /* Info.plist */,
 			);
 			path = Tests;
@@ -270,6 +276,7 @@
 				C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */,
 				C3929C4D1F5F2F6A0014B804 /* SessionDownloadTask.swift in Sources */,
 				C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */,
+				C36B1D2A1F79CD1600819DE1 /* SMBServer.swift in Sources */,
 				C3BAD9761F799A8F009316F4 /* SMBVolume.swift in Sources */,
 				C3BAD97A1F79AB70009316F4 /* SMBDirectory.swift in Sources */,
 				C33449541F59FB6000A0EB61 /* SMBFile.swift in Sources */,
@@ -285,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */,
+				C36B1D611F7B025A00819DE1 /* SMBServerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -477,7 +485,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 88F3UUEVGV;
-				INFOPLIST_FILE = SMBClientTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClientTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -492,7 +499,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 88F3UUEVGV;
-				INFOPLIST_FILE = SMBClientTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClientTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

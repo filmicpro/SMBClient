@@ -77,9 +77,8 @@ extension ServerDiscoveryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let svr = self.servers[indexPath.row]
 
-        let sess = SMBSession()
-        sess.hostName = svr.name
-        sess.ipAddress = svr.ipAddressString
+        let smbServer = SMBServer(hostname: svr.name, ipAddress: svr.ipAddress)
+        let sess = SMBSession(server: smbServer)
 
         let vc = UIStoryboard.volumeListViewController(session: sess)
 //        let vc = UIStoryboard.fileTableViewController(session: sess, title: "Shares")

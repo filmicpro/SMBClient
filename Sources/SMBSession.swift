@@ -9,7 +9,11 @@
 import libdsm
 
 public class SMBSession {
-    internal var smbSession = smb_session_new()
+    internal var rawSession = smb_session_new() {
+        didSet {
+            print("rawSession updated: \(rawSession)")
+        }
+    }
     internal var serialQueue = DispatchQueue(label: "SMBSession")
 
     lazy var dataQueue: OperationQueue = {
@@ -19,12 +23,10 @@ public class SMBSession {
     }()
     private var lastRequestDate: Date?
 
-    public var hostName: String?
-    public var ipAddress: String?
-    public var userName: String?
-    public var password: String?
     public var sessionGuestState: SessionGuestState?
     public var connected: Bool = false
+    public var server: SMBServer
+    public var credentials: Credentials
 
     public var maxTaskOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
 
@@ -37,10 +39,10 @@ public class SMBSession {
         return queue
     }()
 
-    public init() { }
-
-//    public func requestContents(ofShare: SMBVolume)
-//    public func requestContents(ofDirectory: SMBDirectory)
+    public init(server: SMBServer, credentials: SMBSession.Credentials = .guest) {
+        self.server = server
+        self.credentials = credentials
+    }
 
     public func requestVolumes() -> Result<[SMBVolume]> {
         let conError = self.attemptConnection()
@@ -54,7 +56,7 @@ public class SMBSession {
         let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         shareCount.pointee = 0
 
-        smb_share_get_list(self.smbSession, &list, shareCount)
+        smb_share_get_list(self.rawSession, &list, shareCount)
 
         if shareCount.pointee == 0 {
             return Result.success([])
@@ -86,9 +88,10 @@ public class SMBSession {
     public func requestVolumes(completionQueue: DispatchQueue = DispatchQueue.main,
                                completion: @escaping (_ result: Result<[SMBVolume]>) -> Void) {
         let operation = BlockOperation()
+        weak var weakOperation = operation
 
         let blockOperation = {
-            if operation.isCancelled {
+            if let weakOp = weakOperation, weakOp.isCancelled {
                 return
             }
             let requestResult = self.requestVolumes()
@@ -97,6 +100,7 @@ public class SMBSession {
                 completion(requestResult)
             }
         }
+
         operation.addExecutionBlock(blockOperation)
         self.dataQueue.addOperation(operation)
     }
@@ -109,7 +113,7 @@ public class SMBSession {
         }
 
         var shareId: UInt16 = smb_tid.max
-        smb_tree_connect(self.smbSession, volume.name.cString(using: .utf8), &shareId)
+        smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &shareId)
         if shareId == smb_tid.max {
             return Result.success([])
         }
@@ -123,7 +127,7 @@ public class SMBSession {
         relativePath = relativePath.replacingOccurrences(of: "/", with: "\\")
 
         // \SampleMedia\*
-        let statList = smb_find(self.smbSession, shareId, relativePath.cString(using: .utf8))
+        let statList = smb_find(self.rawSession, shareId, relativePath.cString(using: .utf8))
         let listCount = smb_stat_list_count(statList)
         if listCount == 0 {
             return Result.success([])
@@ -155,8 +159,10 @@ public class SMBSession {
                              completionQueue: DispatchQueue = DispatchQueue.main,
                              completion: @escaping (_ result: Result<[SMBItem]>) -> Void) {
         let operation = BlockOperation()
+        weak var weakOperation = operation
+
         let blockOperation = {
-            if operation.isCancelled {
+            if let weakOp = weakOperation, weakOp.isCancelled {
                 return
             }
             let requestResult = self.requestItems(fromVolume: volume, atPath: path)
@@ -171,14 +177,14 @@ public class SMBSession {
     public func attemptConnection() -> SMBSessionError? {
         var err: SMBSessionError?
         serialQueue.sync {
-            err = self.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
+            err = self.attemptConnectionWithSessionPointer(smbSession: self.rawSession)
         }
 
         if err != nil {
             return err
         }
 
-        self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(self.smbSession))
+        self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(self.rawSession))
 
         return nil
     }
@@ -186,11 +192,11 @@ public class SMBSession {
     internal func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
 
         // if we're connecting from a dowload task, and the sessions match, make sure to refresh them periodically
-        if self.smbSession == smbSession {
+        if self.rawSession == smbSession {
             if let lrd = self.lastRequestDate {
                 if Date().timeIntervalSince(lrd) > 60 {
-                    smb_session_destroy(self.smbSession)
-                    self.smbSession = smb_session_new()
+                    smb_session_destroy(self.rawSession)
+                    self.rawSession = smb_session_new()
 
                     self.connected = false
                 }
@@ -199,76 +205,28 @@ public class SMBSession {
         }
 
         // don't attempt another connection if already connected
-        if smb_session_is_guest(smbSession) >= 0 {
+        if smb_session_is_guest(self.rawSession) >= 0 {
             self.connected = true
             return nil
         }
 
-        // ensure at least of piece of connection information is supplied
-        if self.ipAddress == nil && self.hostName == nil {
-            return SMBSessionError.unableToResolveAddress
-        }
-
-        // if only hostName or ipAddress are provided, use NetBIOS to resolve the other
-        if let ipAddressChk = self.ipAddress {
-            if ipAddressChk.characters.count == 0 {
-                if self.hostName == nil {
-                    let ns = NetBIOSNameService()
-                    self.hostName = ns.networkNameFor(ipAddress: ipAddressChk)
-                }
-            }
-        }
-        if let hostName = self.hostName {
-            if hostName.characters.count == 0 {
-                if self.ipAddress == nil {
-                    let ns = NetBIOSNameService()
-                    self.ipAddress = ns.resolveIPAddress(forName: hostName, ofType: NetBIOSNameServiceType.fileServer)
-                }
-            }
-        }
-
-        // if there is still no IP address we're boned
-        guard let ipAddress = self.ipAddress else {
-            return SMBSessionError.unableToResolveAddress
-        }
-        if ipAddress.characters.count < 1 {
-            return SMBSessionError.unableToResolveAddress
-        }
-
-        let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
-        inet_aton(ipAddress.cString(using: .ascii), &addr.pointee)
-
         // attempt a connection
-        let connectionResult = smb_session_connect(smbSession, hostName?.cString(using: .utf8),
-                                                   addr.pointee.s_addr, Int32(SMB_TRANSPORT_TCP))
+        let connectionResult = smb_session_connect(self.rawSession,
+                                                   server.hostname.cString(using: .utf8),
+                                                   server.ipAddress,
+                                                   Int32(SMB_TRANSPORT_TCP))
         if connectionResult != 0 {
             return SMBSessionError.unableToConnect
         }
 
-        let userName: String
-        if let givenUserName = self.userName {
-            userName = givenUserName
-        } else {
-            userName = " "
-        }
-
-        let password: String
-        if let givenPassword = self.password {
-            password = givenPassword
-        } else {
-            password = " "
-        }
-
-        smb_session_set_creds(smbSession, hostName!.cString(using: .utf8),
-                              userName.cString(using: .utf8),
-                              password.cString(using: .utf8))
-        if smb_session_login(smbSession) != 0 {
+        smb_session_set_creds(self.rawSession,
+                              self.server.hostname.cString(using: .utf8),
+                              self.credentials.userName.cString(using: .utf8),
+                              self.credentials.password.cString(using: .utf8))
+        if smb_session_login(self.rawSession) != 0 {
             return SMBSessionError.authenticationFailed
         }
-
-        if smbSession == self.smbSession {
-            self.connected = true
-        }
+        self.connected = true
 
         return nil
     }
@@ -298,7 +256,7 @@ public class SMBSession {
     }
 
     deinit {
-        guard let s = self.smbSession else { return }
+        guard let s = self.rawSession else { return }
         smb_session_destroy(s)
     }
 }
@@ -315,14 +273,47 @@ extension SMBSession {
         case unableToConnect
         case authenticationFailed
     }
+
+    public enum Credentials {
+        case guest
+        case user(name: String, password: String)
+
+        var userName: String {
+            switch self {
+            case .guest:
+                return " " //
+            case .user(let name, _):
+                return name
+            }
+        }
+
+        var password: String {
+            switch self {
+            case .guest:
+                return " "
+            case .user(_, let pass):
+                return pass
+            }
+        }
+    }
+}
+
+extension SMBSession.Credentials: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .guest:
+            return "guest"
+        case .user(let name, _):
+            return "User: \(name) pass: ******"
+        }
+    }
 }
 
 extension SMBSession: CustomDebugStringConvertible {
     public var debugDescription: String {
-        return "hostname : \(String(describing: self.hostName))\n" +
-               "ipAddress : \(String(describing: self.ipAddress))\n" +
-               "userName : \(String(describing: self.userName))\n" +
-               "connected : \(self.connected)"
+        return "hostname : \(String(describing: self.server.hostname))\n" +
+               "ipAddress : \(self.server.ipAddressString)\n" +
+               "credentials : \(self.credentials)\n"
     }
 
 }

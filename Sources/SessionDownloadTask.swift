@@ -121,7 +121,8 @@ public class SessionDownloadTask: SessionTask {
         }
 
         // Connect to the share
-        let (shareName, reqPath) = self.session.shareAndPathFrom(path: self.sourceFilePath)
+//        let (shareName, reqPath) = self.session.shareAndPathFrom(path: self.sourceFilePath)
+        let (shareName, filePath) = ("foo", "TODO")
         let shareCString = shareName.cString(using: .utf8)
         smb_tree_connect(self.smbSession, shareCString, &treeId)
 
@@ -129,7 +130,7 @@ public class SessionDownloadTask: SessionTask {
             delegateError(.serverNotFound)
         }
 
-        guard let filePath = reqPath else { return } // return error
+//        guard let filePath = reqPath else { return } // return error
 
         self.file = self.requestFileForItemAt(path: filePath, inTree: treeId)
 
