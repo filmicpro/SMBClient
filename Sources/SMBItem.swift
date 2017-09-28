@@ -32,4 +32,13 @@ public enum SMBItem {
             return f.name
         }
     }
+
+    var isHidden: Bool {
+        switch self {
+        case .directory(let d):
+            return d.isHidden
+        case .file(let f):
+            return f.isHidden
+        }
+    }
 }

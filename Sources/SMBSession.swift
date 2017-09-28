@@ -65,20 +65,17 @@ public class SMBSession {
 
         var i = 0
         while i <= shareCount.pointee {
-            guard let shareNameCString = smb_share_list_at(list!, i) else {
+            guard let volumeNameCString = smb_share_list_at(list!, i) else {
                 i += 1
                 continue
             }
 
-            var shareName = String(cString: shareNameCString)
-            // skip system shares suffixed by '$'
-            if shareName.characters.last == "$" {
-                i += 1
-                continue
-            }
+            let volmueName = String(cString: volumeNameCString)
+            let v = SMBVolume(server: self.server, name: volmueName)
 
-            let f = SMBVolume(server: self.server, name: shareName)
-            results.append(f)
+            if !v.isHidden {
+                results.append(v)
+            }
 
             i += 1
         }
@@ -137,7 +134,7 @@ public class SMBSession {
                 continue
             }
 
-            if smbItem.name.first != "." {
+            if !smbItem.isHidden {
                 results.append(smbItem)
             }
 

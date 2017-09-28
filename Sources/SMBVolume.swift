@@ -20,4 +20,9 @@ public struct SMBVolume {
     public var path: SMBPath {
         return SMBPath(volume: self)
     }
+
+    // skip system shares suffixed by '$'
+    public var isHidden: Bool {
+        return self.name.last == "$"
+    }
 }

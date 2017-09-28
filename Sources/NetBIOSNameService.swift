@@ -64,17 +64,29 @@ public class NetBIOSNameService {
         return String(cString: name)
     }
 
-    public func resolveIPAddress(forName name: String, ofType type: NetBIOSNameServiceType) -> String? {
+    public func resolveIPAddress(forName name: String, ofType type: NetBIOSNameServiceType) -> UInt32? {
         let addr = UnsafeMutablePointer<in_addr>.allocate(capacity: 1)
         let nameCString = name.cString(using: .utf8)
-        let result = netbios_ns_resolve(self.nameService, nameCString, type.typeValue, &addr.pointee.s_addr)
-        if result < 0 {
+        let resolveResult = netbios_ns_resolve(self.nameService, nameCString, type.typeValue, &addr.pointee.s_addr)
+        if resolveResult < 0 {
+            return nil
+        }
+        let result = UInt32(addr.pointee.s_addr)
+        if result == 0 {
             return nil
         }
 
-        let addressCString = inet_ntoa(addr.pointee)
-        guard let addressCStringValue = addressCString else { return nil }
-        return String(cString: addressCStringValue)
+        return result
+    }
+
+    public static func ipAddressToString(_ address: UInt32) -> String {
+        var bytes = [UInt32]()
+        bytes.append((address >> 24) & 0xFF)
+        bytes.append((address >> 16) & 0xFF)
+        bytes.append((address >> 8) & 0xFF)
+        bytes.append(address & 0xFF)
+
+        return "\(bytes[0]).\(bytes[1]).\(bytes[2]).\(bytes[3])"
     }
 
     public func startDiscovery(withTimeout timeout: TimeInterval) {

@@ -13,11 +13,9 @@ class SMBServerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
 
@@ -26,11 +24,28 @@ class SMBServerTests: XCTestCase {
         XCTAssert(smbServer.ipAddressString == "10.0.1.4", "unexpected ipAddressString")
     }
 
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    func testEquatableAfirmative() {
+        let lhs = SMBServer(hostname: "test", ipAddress: 167772420)
+        let rhs = SMBServer(hostname: "test", ipAddress: 167772420)
+        XCTAssert(lhs == rhs, "SMBServer equality failed")
+    }
+
+    func testEqualityNegativeForHost() {
+        let lhs = SMBServer(hostname: "test", ipAddress: 167772420)
+        let rhs = SMBServer(hostname: "foo", ipAddress: 167772420)
+        XCTAssert(lhs != rhs, "SMBServer equality true, when it should be false - host")
+    }
+
+    func testEquatableNegativeForAddress() {
+        let lhs = SMBServer(hostname: "test", ipAddress: 167772420)
+        let rhs = SMBServer(hostname: "test", ipAddress: 1)
+        XCTAssert(lhs != rhs, "SMBServer equality true, when it should be false - address")
+    }
+
+    func testHostnameLookup() {
+        let srv = SMBServer(hostname: "bender")
+        XCTAssert(srv != nil, "SMBServer init with only hostname failed")
+        XCTAssert(srv?.ipAddress != 0)
     }
 
 }

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C323ABB91F7D9D32004A0C64 /* SMBPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C323ABB81F7D9D32004A0C64 /* SMBPathTests.swift */; };
+		C323ABBB1F7D9EFB004A0C64 /* Directory + Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C323ABBA1F7D9EFB004A0C64 /* Directory + Extension.swift */; };
 		C334494C1F58A80D00A0EB61 /* BridgingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */; };
 		C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */; };
 		C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C334494F1F59D2E600A0EB61 /* SMBSession.swift */; };
@@ -25,6 +27,7 @@
 		C3929C4F1F5F302D0014B804 /* SessionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C4E1F5F302D0014B804 /* SessionTask.swift */; };
 		C3929C531F606E880014B804 /* SessionUploadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C521F606E880014B804 /* SessionUploadTask.swift */; };
 		C3929C591F630A030014B804 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3929C581F630A030014B804 /* Result.swift */; };
+		C3B7323E1F7D807A0056BA8E /* SMBVolumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B7323D1F7D807A0056BA8E /* SMBVolumeTests.swift */; };
 		C3BAD9761F799A8F009316F4 /* SMBVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BAD9751F799A8F009316F4 /* SMBVolume.swift */; };
 		C3BAD97A1F79AB70009316F4 /* SMBDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BAD9791F79AB70009316F4 /* SMBDirectory.swift */; };
 		C3BAD97C1F79ABC8009316F4 /* SMBItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BAD97B1F79ABC8009316F4 /* SMBItem.swift */; };
@@ -41,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C323ABB81F7D9D32004A0C64 /* SMBPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBPathTests.swift; sourceTree = "<group>"; };
+		C323ABBA1F7D9EFB004A0C64 /* Directory + Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Directory + Extension.swift"; sourceTree = "<group>"; };
 		C334494B1F58A80D00A0EB61 /* BridgingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgingHelpers.swift; sourceTree = "<group>"; };
 		C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBIOSNameServiceEntry.swift; sourceTree = "<group>"; };
 		C334494F1F59D2E600A0EB61 /* SMBSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBSession.swift; sourceTree = "<group>"; };
@@ -64,6 +69,7 @@
 		C3929C4E1F5F302D0014B804 /* SessionTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTask.swift; sourceTree = "<group>"; };
 		C3929C521F606E880014B804 /* SessionUploadTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionUploadTask.swift; sourceTree = "<group>"; };
 		C3929C581F630A030014B804 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
+		C3B7323D1F7D807A0056BA8E /* SMBVolumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBVolumeTests.swift; sourceTree = "<group>"; };
 		C3BAD9751F799A8F009316F4 /* SMBVolume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBVolume.swift; sourceTree = "<group>"; };
 		C3BAD9791F79AB70009316F4 /* SMBDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBDirectory.swift; sourceTree = "<group>"; };
 		C3BAD97B1F79ABC8009316F4 /* SMBItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBItem.swift; sourceTree = "<group>"; };
@@ -135,8 +141,11 @@
 		C36F2BAC1F5793B5008B96C4 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */,
+				C323ABBA1F7D9EFB004A0C64 /* Directory + Extension.swift */,
 				C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */,
+				C3B7323D1F7D807A0056BA8E /* SMBVolumeTests.swift */,
+				C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */,
+				C323ABB81F7D9D32004A0C64 /* SMBPathTests.swift */,
 				C36F2BAF1F5793B5008B96C4 /* Info.plist */,
 			);
 			path = Tests;
@@ -295,8 +304,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C323ABBB1F7D9EFB004A0C64 /* Directory + Extension.swift in Sources */,
 				C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */,
+				C3B7323E1F7D807A0056BA8E /* SMBVolumeTests.swift in Sources */,
 				C36B1D611F7B025A00819DE1 /* SMBServerTests.swift in Sources */,
+				C323ABB91F7D9D32004A0C64 /* SMBPathTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

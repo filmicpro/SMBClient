@@ -42,6 +42,10 @@ public struct SMBFile {
         self.allocationSize = 0
     }
 
+    public var isHidden: Bool {
+        return self.name.first == "."
+    }
+
     internal var uploadPath: String {
         let slash = "\\"
         let dirs: [String] = self.path.directories.map { $0.name }

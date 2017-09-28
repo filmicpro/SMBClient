@@ -17,6 +17,17 @@ public struct SMBServer {
         self.ipAddress = ipAddress
     }
 
+    // fails initiation if ipAddress lookup fails
+    public init?(hostname: String) {
+        self.hostname = hostname
+        let ns = NetBIOSNameService()
+        if let addr = ns.resolveIPAddress(forName: self.hostname, ofType: .fileServer) {
+            self.ipAddress = addr
+        } else {
+            return nil
+        }
+    }
+
     public var ipAddressString: String {
         var bytes = [UInt32]()
         bytes.append((self.ipAddress >> 24) & 0xFF)
@@ -32,4 +43,10 @@ extension SMBServer: CustomStringConvertible {
     public var description: String {
         return "\(hostname) - \(ipAddressString)"
     }
+}
+
+extension SMBServer: Equatable { }
+
+public func == (lhs: SMBServer, rhs: SMBServer) -> Bool {
+    return lhs.hostname == rhs.hostname && lhs.ipAddress == rhs.ipAddress
 }
