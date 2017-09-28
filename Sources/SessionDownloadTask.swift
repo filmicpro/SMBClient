@@ -28,7 +28,7 @@ public protocol SessionDownloadTaskDelegate {
 }
 
 public class SessionDownloadTask: SessionTask {
-    var sourceFilePath: String
+    var sourceFile: SMBFile
     var destinationFilePath: String?
     var bytesReceived: UInt64?
     var bytesExpected: UInt64?
@@ -40,17 +40,17 @@ public class SessionDownloadTask: SessionTask {
     }
 
     var hashForFilePath: String {
-        let filepath = self.sourceFilePath.lowercased()
+        let filepath = self.sourceFile.path.routablePath.lowercased()
         return "\(filepath.hashValue)"
     }
 
     public var delegate: SessionDownloadTaskDelegate?
 
     public init(session: SMBSession,
-                sourceFilePath: String,
+                sourceFile: SMBFile,
                 destinationFilePath: String? = nil,
                 delegate: SessionDownloadTaskDelegate? = nil) {
-        self.sourceFilePath = sourceFilePath
+        self.sourceFile = sourceFile
         self.destinationFilePath = destinationFilePath
         self.delegate = delegate
         super.init(session: session)
@@ -66,7 +66,6 @@ public class SessionDownloadTask: SessionTask {
         guard let dest = self.destinationFilePath else { return nil }
         let path = URL(fileURLWithPath: dest.replacingOccurrences(of: "file://", with: ""))
 
-        //
         var fileName = path.lastPathComponent
         let isFile = fileName.contains(".") && fileName.characters.first != "."
 
@@ -74,8 +73,7 @@ public class SessionDownloadTask: SessionTask {
         if isFile {
             folderPath = path.deletingLastPathComponent()
         } else {
-            let source = URL(fileURLWithPath: self.sourceFilePath)
-            fileName = source.lastPathComponent
+            fileName = self.sourceFile.name
             folderPath = path
         }
 
@@ -102,12 +100,9 @@ public class SessionDownloadTask: SessionTask {
         var fileId = smb_fd(0)
 
         // Connect to SMB Server
-
-        self.smbSession = smb_session_new()
-
         var connectError: SMBSession.SMBSessionError? = nil
         self.session.serialQueue.sync {
-            connectError = self.session.attemptConnectionWithSessionPointer(smbSession: self.smbSession)
+            connectError = self.session.refreshConnection(smbSession: self.session.rawSession)
         }
         if connectError != nil {
             delegateError(.serverNotFound)
@@ -121,18 +116,15 @@ public class SessionDownloadTask: SessionTask {
         }
 
         // Connect to the share
-//        let (shareName, reqPath) = self.session.shareAndPathFrom(path: self.sourceFilePath)
-        let (shareName, filePath) = ("foo", "TODO")
-        let shareCString = shareName.cString(using: .utf8)
-        smb_tree_connect(self.smbSession, shareCString, &treeId)
+        let volumeName = self.sourceFile.path.volume.name
+        let volumeCString = volumeName.cString(using: .utf8)
+        smb_tree_connect(self.session.rawSession, volumeCString, &treeId)
 
         if treeId == 0 {
             delegateError(.serverNotFound)
         }
 
-//        guard let filePath = reqPath else { return } // return error
-
-        self.file = self.requestFileForItemAt(path: filePath, inTree: treeId)
+        self.file = self.request(file: sourceFile, inTree: treeId)
 
         guard let file = self.file else {
             delegateError(.fileNotFound)
@@ -149,12 +141,10 @@ public class SessionDownloadTask: SessionTask {
         // TODO if directory check was here, refactor to enum should resolve
 
         self.bytesExpected = file.fileSize
-        let formattedPath = "\\\(filePath)".replacingOccurrences(of: "/", with: "\\\\")
 
         // ### Open file handle
-        smb_fopen(self.smbSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_READ), &fileId)
+        smb_fopen(self.session.rawSession, treeId, file.downloadPath.cString(using: .utf8), UInt32(SMB_MOD_READ), &fileId)
         if fileId == 0 {
-            // return error TODO
             delegateError(.fileNotFound)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
             return
@@ -171,7 +161,8 @@ public class SessionDownloadTask: SessionTask {
 
         do {
             try FileManager.default.createDirectory(atPath: path!.absoluteString,
-                                                    withIntermediateDirectories: true, attributes: nil)
+                                                    withIntermediateDirectories: true,
+                                                    attributes: nil)
         } catch {
             // return error TODO
         }
@@ -193,7 +184,7 @@ public class SessionDownloadTask: SessionTask {
 
         if let so = seekOffset {
             if so > 0 {
-                smb_fseek(self.smbSession, fileId, Int64(so), Int32(SMB_SEEK_SET))
+                smb_fseek(self.session.rawSession, fileId, Int64(so), Int32(SMB_SEEK_SET))
                 // self.didResumeOffset(seekOffset: so, totalBytesExpeted: self.bytesExpected!) // TODO
             }
         }
@@ -204,7 +195,7 @@ public class SessionDownloadTask: SessionTask {
         let buffer = UnsafeMutableRawPointer.allocate(bytes: bufferSize, alignedTo: 1)
 
         repeat {
-            bytesRead = smb_fread(self.smbSession, fileId, buffer, bufferSize)
+            bytesRead = smb_fread(self.session.rawSession, fileId, buffer, bufferSize)
             if bytesRead < 0 {
                 self.fail()
                 delegateError(.downloadFailed)

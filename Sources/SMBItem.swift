@@ -12,16 +12,12 @@ public enum SMBItem {
     case file(SMBFile)
     case directory(SMBDirectory)
 
-    init?(stat: OpaquePointer, session: SMBSession, parentDirectoryFilePath path: String) {
+    init?(stat: OpaquePointer, session: SMBSession, parentPath: SMBPath) {
         if smb_stat_get(stat, SMB_STAT_ISDIR) != 0 {
-//            guard let cName = smb_stat_name(stat) else { return nil }
-//            let name = String(cString: cName)
-
-            guard let directory = SMBDirectory(stat: stat, session: session, parentDirectoryFilePath: path) else { return nil}
-//            guard let directory = SMBDirectory(name: name, session: session) else { return nil }
+            guard let directory = SMBDirectory(stat: stat, parentPath: parentPath) else { return nil}
             self = .directory(directory)
         } else {
-            guard let file = SMBFile(stat: stat, session: session, parentDirectoryFilePath: path) else {
+            guard let file = SMBFile(stat: stat, session: session, parentPath: parentPath) else {
                 return nil
             }
             self = .file(file)

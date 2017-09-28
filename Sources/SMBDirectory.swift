@@ -8,23 +8,24 @@
 
 import libdsm
 
-// shareRoot, directory, file are different things
 public struct SMBDirectory {
     public var name: String
-    public var parentPath: String
+    public var volume: SMBVolume
 
     public var createdAt: Date?
     public var accessedAt: Date?
     public var writeAt: Date?
     public var modifiedAt: Date?
 
-    init?(stat: OpaquePointer, session: SMBSession, parentDirectoryFilePath path: String) {
+    init?(stat: OpaquePointer, volume: SMBVolume, parentDirectoryFilePath path: String) {
         guard let cName = smb_stat_name(stat) else { return nil }
         self.name = String(cString: cName)
-        self.parentPath = path
+        self.volume = volume
     }
 
-    public var fullPath: String {
-        return "\(self.parentPath)/\(self.name)"
+    init?(stat: OpaquePointer, parentPath: SMBPath) {
+        guard let cName = smb_stat_name(stat) else { return nil }
+        self.name = String(cString: cName)
+        self.volume = parentPath.volume
     }
 }

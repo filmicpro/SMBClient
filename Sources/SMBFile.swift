@@ -8,12 +8,10 @@
 
 import libdsm
 
-// shareRoot, directory, file are different things
 public struct SMBFile {
+    public private(set) var path: SMBPath
+
     var session: SMBSession
-//    var filePath: String
-    public var isShareRoot: Bool
-    public var isDirectory: Bool
     public var name: String
 
     public var fileSize: UInt64
@@ -24,23 +22,35 @@ public struct SMBFile {
     public var writeAt: Date?
     public var modifiedAt: Date?
 
-    init?(stat: OpaquePointer, session: SMBSession, parentDirectoryFilePath path: String) {
+    init?(stat: OpaquePointer, session: SMBSession, parentPath: SMBPath) {
+        self.path = parentPath
         guard let cName = smb_stat_name(stat) else { return nil }
-        self.name = String(cString: cName)
+        let pathAndFile = String(cString: cName).split(separator: "\\")
+        guard let n = pathAndFile.last else { return nil }
+        self.name = n.decomposedStringWithCanonicalMapping
 
         self.session = session
         self.fileSize = smb_stat_get(stat, SMB_STAT_SIZE)
         self.allocationSize = smb_stat_get(stat, SMB_STAT_ALLOC_SIZE)
-        self.isDirectory = smb_stat_get(stat, SMB_STAT_ISDIR) != 0
-        self.isShareRoot = false
     }
 
-    init?(name: String, session: SMBSession) {
+    init?(path: SMBPath, name: String, session: SMBSession) {
+        self.path = path
         self.name = name
         self.session = session
         self.fileSize = 0
         self.allocationSize = 0
-        self.isDirectory = true
-        self.isShareRoot = true
+    }
+
+    internal var uploadPath: String {
+        let slash = "\\"
+        let dirs: [String] = self.path.directories.map { $0.name }
+        let result = slash + dirs.joined(separator: slash) + slash + self.name
+        return result
+    }
+
+    internal var downloadPath: String {
+        let slash = "\\"
+        return slash + self.uploadPath
     }
 }

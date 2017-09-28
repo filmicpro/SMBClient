@@ -14,6 +14,7 @@
 		C33449541F59FB6000A0EB61 /* SMBFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33449531F59FB6000A0EB61 /* SMBFile.swift */; };
 		C36B1D2A1F79CD1600819DE1 /* SMBServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36B1D291F79CD1600819DE1 /* SMBServer.swift */; };
 		C36B1D611F7B025A00819DE1 /* SMBServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */; };
+		C36B1D651F7C28EB00819DE1 /* SMBPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36B1D641F7C28EB00819DE1 /* SMBPath.swift */; };
 		C36F2BA91F5793B5008B96C4 /* SMBClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */; };
 		C36F2BAE1F5793B5008B96C4 /* SMBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */; };
 		C36F2BB01F5793B5008B96C4 /* SMBClient.h in Headers */ = {isa = PBXBuildFile; fileRef = C36F2BA21F5793B5008B96C4 /* SMBClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -47,6 +48,7 @@
 		C33449531F59FB6000A0EB61 /* SMBFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBFile.swift; sourceTree = "<group>"; };
 		C36B1D291F79CD1600819DE1 /* SMBServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBServer.swift; sourceTree = "<group>"; };
 		C36B1D601F7B025A00819DE1 /* SMBServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBServerTests.swift; sourceTree = "<group>"; };
+		C36B1D641F7C28EB00819DE1 /* SMBPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBPath.swift; sourceTree = "<group>"; };
 		C36F2B9F1F5793B5008B96C4 /* SMBClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SMBClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C36F2BA21F5793B5008B96C4 /* SMBClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMBClient.h; sourceTree = "<group>"; };
 		C36F2BA31F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				C3BAD97B1F79ABC8009316F4 /* SMBItem.swift */,
 				C3BAD9791F79AB70009316F4 /* SMBDirectory.swift */,
 				C33449531F59FB6000A0EB61 /* SMBFile.swift */,
+				C36B1D641F7C28EB00819DE1 /* SMBPath.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -276,6 +279,7 @@
 				C334494E1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift in Sources */,
 				C3929C4D1F5F2F6A0014B804 /* SessionDownloadTask.swift in Sources */,
 				C33449501F59D2E600A0EB61 /* SMBSession.swift in Sources */,
+				C36B1D651F7C28EB00819DE1 /* SMBPath.swift in Sources */,
 				C36B1D2A1F79CD1600819DE1 /* SMBServer.swift in Sources */,
 				C3BAD9761F799A8F009316F4 /* SMBVolume.swift in Sources */,
 				C3BAD97A1F79AB70009316F4 /* SMBDirectory.swift in Sources */,

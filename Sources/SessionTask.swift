@@ -16,7 +16,6 @@ public class SessionTask {
     var canBeResumed: Bool = false
     var state: SessionTaskState = .ready
 
-    internal var smbSession: OpaquePointer?
     internal var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
 
     init(session: SMBSession, delegateQueue: DispatchQueue = DispatchQueue.main) {
@@ -39,14 +38,15 @@ public class SessionTask {
         return
     }
 
-    func requestFileForItemAt(path: String, inTree treeId: smb_tid) -> SMBFile? {
-        let fileCString = path.cString(using: .utf8)
-        guard let stat = smb_fstat(self.smbSession, treeId, fileCString) else { return nil }
+    // used to validate that a remote file is where we expect, before operating on it
+    func request(file: SMBFile, inTree treeId: smb_tid) -> SMBFile? {
+        let fileCString = file.downloadPath
+        guard let stat = smb_fstat(self.session.rawSession, treeId, fileCString) else { return nil }
 
-        let file = SMBFile(stat: stat, session: self.session, parentDirectoryFilePath: path)
+        let searchFile = SMBFile(stat: stat, session: self.session, parentPath: file.path)
 
         smb_stat_destroy(stat)
-        return file
+        return searchFile
     }
 
     internal func cleanupBlock(treeId: smb_tid, fileId: smb_fd) {
@@ -56,10 +56,10 @@ public class SessionTask {
         }
 
         if self.taskOperation != nil && treeId > 0 {
-            smb_tree_disconnect(self.smbSession, treeId)
+            smb_tree_disconnect(self.session.rawSession, treeId)
         }
 
-        if let session = self.smbSession {
+        if let session = self.session.rawSession {
             if fileId > 0 {
                 smb_fclose(session, fileId)
             }

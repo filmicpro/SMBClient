@@ -77,7 +77,7 @@ public class SMBSession {
                 continue
             }
 
-            let f = SMBVolume(name: shareName, session: self)
+            let f = SMBVolume(server: self.server, name: shareName)
             results.append(f)
 
             i += 1
@@ -105,29 +105,21 @@ public class SMBSession {
         self.dataQueue.addOperation(operation)
     }
 
-    public func requestItems(fromVolume volume: SMBVolume, atPath path: String) -> Result<[SMBItem]> {
+    public func requestItems(atPath path: SMBPath) -> Result<[SMBItem]> {
         let conError = self.attemptConnection()
-        // switch result/error
+
         if let error = conError {
             return Result.failure(error)
         }
 
         var shareId: UInt16 = smb_tid.max
-        smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &shareId)
+        smb_tree_connect(self.rawSession, path.volume.name.cString(using: .utf8), &shareId)
         if shareId == smb_tid.max {
             return Result.success([])
         }
 
-        var relativePath = path // wildcard to search
-        if relativePath.count > 0 {
-            relativePath += "/*"
-        } else {
-            relativePath += "*"
-        }
-        relativePath = relativePath.replacingOccurrences(of: "/", with: "\\")
-
         // \SampleMedia\*
-        let statList = smb_find(self.rawSession, shareId, relativePath.cString(using: .utf8))
+        let statList = smb_find(self.rawSession, shareId, path.searchPath.cString(using: .utf8))
         let listCount = smb_stat_list_count(statList)
         if listCount == 0 {
             return Result.success([])
@@ -139,7 +131,8 @@ public class SMBSession {
         while i < listCount {
             let item = smb_stat_list_at(statList, i)
             guard let stat = item else { i = i + 1; continue }
-            guard let smbItem = SMBItem(stat: stat, session: self, parentDirectoryFilePath: relativePath) else {
+            // guard let smbItem = SMBItem(stat: stat, session: self, parentDirectoryFilePath: relativePath) else {
+            guard let smbItem = SMBItem(stat: stat, session: self, parentPath: path) else {
                 i += 1
                 continue
             }
@@ -154,8 +147,7 @@ public class SMBSession {
         return Result.success(results)
     }
 
-    public func requestItems(fromVolume volume: SMBVolume,
-                             atPath path: String,
+    public func requestItems(atPath path: SMBPath,
                              completionQueue: DispatchQueue = DispatchQueue.main,
                              completion: @escaping (_ result: Result<[SMBItem]>) -> Void) {
         let operation = BlockOperation()
@@ -165,7 +157,7 @@ public class SMBSession {
             if let weakOp = weakOperation, weakOp.isCancelled {
                 return
             }
-            let requestResult = self.requestItems(fromVolume: volume, atPath: path)
+            let requestResult = self.requestItems(atPath: path)
             completionQueue.async {
                 completion(requestResult)
             }
@@ -189,7 +181,20 @@ public class SMBSession {
         return nil
     }
 
-    internal func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
+    internal func refreshConnection(smbSession refreshSession: OpaquePointer?) -> SMBSessionError? {
+        var err: SMBSessionError?
+        err = self.attemptConnectionWithSessionPointer(smbSession: refreshSession)
+
+        if err != nil {
+            return err
+        }
+
+        self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(refreshSession))
+
+        return nil
+    }
+
+    private func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
 
         // if we're connecting from a dowload task, and the sessions match, make sure to refresh them periodically
         if self.rawSession == smbSession {
@@ -231,21 +236,23 @@ public class SMBSession {
         return nil
     }
 
-    public func downloadTaskForFile(atPath path: String,
+    public func downloadTaskForFile(file: SMBFile,
                                     destinationPath: String?,
                                     delegate: SessionDownloadTaskDelegate?) -> SessionDownloadTask {
         let task = SessionDownloadTask(session: self,
-                                       sourceFilePath: path,
+                                       sourceFile: file,
                                        destinationFilePath: destinationPath,
                                        delegate: delegate)
         self.downloadTasks.append(task)
         return task
     }
 
-    @discardableResult public func uploadTaskForFile(atPath path: String,
+    // uploadTaskForFile(toPath: path, withName: fileName, data: data, delegate: self)
+    @discardableResult public func uploadTaskForFile(toPath path: SMBPath,
+                                                     withName fileName: String,
                                                      data: Data,
                                                      delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
-        let task = SessionUploadTask(session: self, path: path, data: data)
+        let task = SessionUploadTask(session: self, path: path, fileName: fileName, data: data)
         task.delegate = delegate
         self.uploadTasks.append(task)
         return task

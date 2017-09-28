@@ -17,17 +17,20 @@ public protocol SessionUploadTaskDelegate {
 }
 
 public class SessionUploadTask: SessionTask {
-    var path: String
+    var path: SMBPath
+    var fileName: String
     var data: Data
     var delegate: SessionUploadTaskDelegate?
     var file: SMBFile?
 
     public init(session: SMBSession,
                 delegateQueue: DispatchQueue = DispatchQueue.main,
-                path: String,
+                path: SMBPath,
+                fileName: String,
                 data: Data,
                 delegate: SessionUploadTaskDelegate? = nil) {
         self.path = path
+        self.fileName = fileName
         self.data = data
         self.delegate = delegate
         super.init(session: session, delegateQueue: delegateQueue)
@@ -48,20 +51,15 @@ public class SessionUploadTask: SessionTask {
         var fileId = smb_fd(0)
 
         // ### confirm server is still available
-//        var smbSessionError: SMBSessionError? = nil
-//        self.smbSession.serialQueue.async {
         let smbSessionError = self.session.attemptConnection()
-//        }
         if smbSessionError != nil {
             self.delegateError(.serverNotFound)
             return
         }
 
         // ### connect to share
-        let (shareName, sharePath) = ("foo", "TODO") //  self.session.shareAndPathFrom(path: self.path)
-//        guard let sharePath = sharePathRaw else { return } // TODO: error?
-        let shareCString = shareName.cString(using: .utf8)
-        smb_tree_connect(self.session.rawSession, shareCString, &treeId)
+        let volumeName = self.path.volume.name.cString(using: .utf8)
+        smb_tree_connect(self.session.rawSession, volumeName, &treeId)
         if treeId == 0 {
             self.delegateError(.connectionFailed)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
@@ -73,22 +71,11 @@ public class SessionUploadTask: SessionTask {
         }
 
         // ### find the target file
-        var formattedPath = "\(sharePath)".replacingOccurrences(of: "/", with: "\\\\")
-        formattedPath = "\\(formattedPath)"
-
-        self.file = self.requestFileForItemAt(path: formattedPath, inTree: treeId)
+        self.file = SMBFile(path: self.path, name: self.fileName, session: self.session)
 
         if operation.isCancelled {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
             return
-        }
-
-        if let f = file {
-            if f.isDirectory {
-                // shouldn't have to do this if we're passing files
-                delegateError(.directoryDownloaded)
-                return
-            }
         }
 
         let SMB_MOD_RW = SMB_MOD_READ |
@@ -99,15 +86,16 @@ public class SessionUploadTask: SessionTask {
             SMB_MOD_WRITE_ATTR |
             SMB_MOD_READ_CTL
         // ### open the file handle
-        smb_fopen(self.session.rawSession, treeId, formattedPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
+        smb_fopen(self.session.rawSession, treeId, self.file!.uploadPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
         if fileId == 0 {
-            self.delegateError(.fileNotFound)
+            self.delegateError(.connectionFailed)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
             return
         }
 
         if operation.isCancelled {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
+            self.delegateError(.cancelled)
             return
         }
 

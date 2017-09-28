@@ -13,8 +13,9 @@ class FilesTableViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
 
     var session: SMBSession?
-    var volume: SMBVolume?
-    var path: String?
+    var path: SMBPath?
+//    var volume: SMBVolume?
+//    var path: String?
     var items: [SMBItem]? {
         didSet {
             self.tableView.reloadData()
@@ -30,12 +31,12 @@ class FilesTableViewController: UIViewController {
 
         guard let session = self.session else { return }
         guard let path = self.path else { return }
-        guard let volume = self.volume else { return }
+//        guard let volume = self.volume else { return }
 
         self.title = "Loading..."
 
-        session.requestItems(fromVolume: volume, atPath: path) { (result) in
-            self.title = path
+        session.requestItems(atPath: path) { (result) in
+            self.title = path.routablePath
             switch result {
             case .success(let items):
                 self.items = items
@@ -55,10 +56,12 @@ class FilesTableViewController: UIViewController {
         guard let session = self.session else { return }
         guard let path = self.path else { return }
 
+        let fileName = "\(UUID().uuidString).txt"
+
         let uploadPath = "\(path)/\(UUID().uuidString).txt"
         guard let data = uploadPath.data(using: .utf8) else { return }
 
-        let uploadTask = session.uploadTaskForFile(atPath: uploadPath, data: data, delegate: self)
+        let uploadTask = session.uploadTaskForFile(toPath: path, withName: fileName, data: data, delegate: self)
         uploadTask.resume()
     }
 
@@ -119,22 +122,26 @@ extension FilesTableViewController: UITableViewDataSource {
 
         switch item {
         case .file(let file):
-            let vc = UIStoryboard.downloadProgressViewController(session: self.session!, filePath: "\(currentPath)/\(file.name)")
+            let vc = UIStoryboard.downloadProgressViewController(session: self.session!, file: file)
             self.navigationController?.pushViewController(vc, animated: true)
             return
         case .directory(let directory):
-            let newPath: String
-            if currentPath != "/" {
-                newPath = "\(currentPath)/\(directory.name)"
-            } else {
-                if currentPath == "/" {
-                    newPath = "/\(directory.name)"
-                } else {
-                    newPath = "\(currentPath)/\(directory.name)"
-                }
-            }
+//            let newPath: String
+//            if currentPath != "/" {
+//                newPath = "\(currentPath)/\(directory.name)"
+//            } else {
+//                if currentPath == "/" {
+//                    newPath = "/\(directory.name)"
+//                } else {
+//                    newPath = "\(currentPath)/\(directory.name)"
+//                }
+//            }
 
-            let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: self.volume!, title: directory.name, path: newPath)
+            var newPath = self.path!
+            newPath.append(directory: directory)
+
+//            let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: self.volume!, title: directory.name, path: newPath)
+            let vc = UIStoryboard.fileTableViewController(session: self.session!, path: newPath, title: newPath.routablePath)
             self.navigationController?.pushViewController(vc, animated: true)
         }
     }

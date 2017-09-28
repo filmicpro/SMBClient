@@ -75,7 +75,8 @@ extension VolumeListViewController: UITableViewDelegate {
 
         let volume = self.volumes[indexPath.row]
 
-        let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: volume, title: volume.name, path: "/")
+//        let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: volume, title: volume.name, path: "/")
+        let vc = UIStoryboard.fileTableViewController(session: self.session!, path: volume.path, title: volume.name)
         self.navigationController?.pushViewController(vc, animated: true)
     }
 }

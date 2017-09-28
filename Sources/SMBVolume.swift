@@ -9,12 +9,15 @@
 import Foundation
 
 public struct SMBVolume {
-    var session: SMBSession
-
+    public var server: SMBServer
     public var name: String
 
-    init(name: String, session: SMBSession) {
+    init(server: SMBServer, name: String) {
+        self.server = server
         self.name = name
-        self.session = session
+    }
+
+    public var path: SMBPath {
+        return SMBPath(volume: self)
     }
 }

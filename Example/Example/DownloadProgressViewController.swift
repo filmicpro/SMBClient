@@ -12,7 +12,7 @@ import SMBClient
 class DownloadProgressViewController: UIViewController {
 
     var session: SMBSession?
-    var filePath: String?
+    var file: SMBFile?
 
     private var task: SessionDownloadTask?
 
@@ -25,13 +25,13 @@ class DownloadProgressViewController: UIViewController {
         self.downloadProgressView.progress = 0
 
         guard let destFolder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last else { return }
-        guard let filePath = self.filePath else { return }
-        let fileURL = URL(fileURLWithPath: filePath)
+        guard let file = self.file else { return }
+        let fileURL = URL(fileURLWithPath: file.name)
         let fileName = fileURL.lastPathComponent
 
         self.fileLabel.text = fileName
 
-        self.task = self.session?.downloadTaskForFile(atPath: filePath, destinationPath: destFolder.absoluteString + fileName, delegate: self)
+        self.task = self.session?.downloadTaskForFile(file: file, destinationPath: destFolder.absoluteString + fileName, delegate: self)
         if let t = self.task {
             t.resume()
         }
