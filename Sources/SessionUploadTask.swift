@@ -58,12 +58,13 @@ public class SessionUploadTask: SessionTask {
         }
 
         // ### connect to share
-        let volumeName = self.path.volume.name.cString(using: .utf8)
-        smb_tree_connect(self.session.rawSession, volumeName, &treeId)
-        if treeId == 0 {
+        let conn = self.session.treeConnect(volume: self.path.volume)
+        switch conn {
+        case .failure(_):
             self.delegateError(.connectionFailed)
-            self.cleanupBlock(treeId: treeId, fileId: fileId)
             return
+        case .success(let t):
+            treeId = t
         }
 
         if operation.isCancelled {
@@ -71,7 +72,7 @@ public class SessionUploadTask: SessionTask {
         }
 
         // ### find the target file
-        self.file = SMBFile(path: self.path, name: self.fileName, session: self.session)
+        self.file = SMBFile(path: self.path, name: self.fileName)
 
         if operation.isCancelled {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
@@ -86,11 +87,14 @@ public class SessionUploadTask: SessionTask {
             SMB_MOD_WRITE_ATTR |
             SMB_MOD_READ_CTL
         // ### open the file handle
-        smb_fopen(self.session.rawSession, treeId, self.file!.uploadPath.cString(using: .utf8), UInt32(SMB_MOD_RW), &fileId)
-        if fileId == 0 {
-            self.delegateError(.connectionFailed)
+        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: self.file!.uploadPath, mod: UInt32(SMB_MOD_RW))
+        switch fileOpenResult {
+        case .failure(_):
+            self.delegateError(SessionUploadTask.SessionUploadError.connectionFailed)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
             return
+        case .success(let fId):
+            fileId = fId
         }
 
         if operation.isCancelled {
@@ -113,7 +117,7 @@ public class SessionUploadTask: SessionTask {
 
             let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
 
-            bytesWritten = smb_fwrite(self.session.rawSession, fileId, ptr, uploadBufferLimit)
+            bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr, bufferSize: uploadBufferLimit)
             if bytesWritten < 0 {
                 fail()
                 self.delegateError(.uploadFailed)

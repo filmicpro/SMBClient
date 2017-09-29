@@ -40,13 +40,13 @@ public class SessionTask {
 
     // used to validate that a remote file is where we expect, before operating on it
     func request(file: SMBFile, inTree treeId: smb_tid) -> SMBFile? {
-        let fileCString = file.downloadPath
-        guard let stat = smb_fstat(self.session.rawSession, treeId, fileCString) else { return nil }
-
-        let searchFile = SMBFile(stat: stat, session: self.session, parentPath: file.path)
-
-        smb_stat_destroy(stat)
-        return searchFile
+        let fileStat = self.session.fileStat(treeId: treeId, file: file)
+        switch fileStat {
+        case .failure(_):
+            return nil
+        case .success(let f):
+            return f
+        }
     }
 
     internal func cleanupBlock(treeId: smb_tid, fileId: smb_fd) {
@@ -56,15 +56,9 @@ public class SessionTask {
         }
 
         if self.taskOperation != nil && treeId > 0 {
-            smb_tree_disconnect(self.session.rawSession, treeId)
+            _ = self.session.treeDisconnect(treeId: treeId)
         }
-
-        if let session = self.session.rawSession {
-            if fileId > 0 {
-                smb_fclose(session, fileId)
-            }
-            smb_session_destroy(session)
-        }
+        self.session.fileClose(fileId: fileId)
     }
 
     public func cancel() {

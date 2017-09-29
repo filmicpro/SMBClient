@@ -101,9 +101,7 @@ public class SessionDownloadTask: SessionTask {
 
         // Connect to SMB Server
         var connectError: SMBSession.SMBSessionError? = nil
-        self.session.serialQueue.sync {
-            connectError = self.session.refreshConnection(smbSession: self.session.rawSession)
-        }
+        connectError = self.session.attemptConnection()
         if connectError != nil {
             delegateError(.serverNotFound)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
@@ -115,13 +113,13 @@ public class SessionDownloadTask: SessionTask {
             return
         }
 
-        // Connect to the share
-        let volumeName = self.sourceFile.path.volume.name
-        let volumeCString = volumeName.cString(using: .utf8)
-        smb_tree_connect(self.session.rawSession, volumeCString, &treeId)
-
-        if treeId == 0 {
+        // Connect to the volume/share
+        let treeConnResult = self.session.treeConnect(volume: self.sourceFile.path.volume)
+        switch treeConnResult {
+        case .failure(_):
             delegateError(.serverNotFound)
+        case .success(let t):
+            treeId = t
         }
 
         self.file = self.request(file: sourceFile, inTree: treeId)
@@ -138,16 +136,17 @@ public class SessionDownloadTask: SessionTask {
             return
         }
 
-        // TODO if directory check was here, refactor to enum should resolve
-
         self.bytesExpected = file.fileSize
 
         // ### Open file handle
-        smb_fopen(self.session.rawSession, treeId, file.downloadPath.cString(using: .utf8), UInt32(SMB_MOD_READ), &fileId)
-        if fileId == 0 {
+        let fopen = self.session.fileOpen(treeId: treeId, path: file.downloadPath, mod: UInt32(SMB_MOD_READ))
+        switch fopen {
+        case .failure(_):
             delegateError(.fileNotFound)
-            self.cleanupBlock(treeId: treeId, fileId: fileId)
+            self.cleanupBlock(treeId: treeId, fileId: 0)
             return
+        case .success(let f):
+            fileId = f
         }
 
         if operation.isCancelled {
@@ -182,29 +181,36 @@ public class SessionDownloadTask: SessionTask {
         })
         #endif
 
-        if let so = seekOffset {
-            if so > 0 {
-                smb_fseek(self.session.rawSession, fileId, Int64(so), Int32(SMB_SEEK_SET))
-                // self.didResumeOffset(seekOffset: so, totalBytesExpeted: self.bytesExpected!) // TODO
+        if let so = seekOffset, so > 0 {
+            let fSeek = self.session.fileSeek(fileId: fileId, offset: so)
+            switch fSeek {
+            case .failure(_):
+                delegateError(.downloadFailed)
+                self.cleanupBlock(treeId: treeId, fileId: fileId)
+                return
+            case .success(_):
+                // TODO: this should probably update bytesReceived
+                // seekOffset == readPointer
+                break
             }
         }
 
         // ### Download bytes
         var bytesRead: Int = 0
         let bufferSize: Int = 65535
-        let buffer = UnsafeMutableRawPointer.allocate(bytes: bufferSize, alignedTo: 1)
 
         repeat {
-            bytesRead = smb_fread(self.session.rawSession, fileId, buffer, bufferSize)
-            if bytesRead < 0 {
+            let readResult = self.session.fileRead(fileId: fileId, bufferSize: UInt(bufferSize))
+            switch readResult {
+            case .failure(_):
                 self.fail()
                 delegateError(.downloadFailed)
                 break
+            case .success(let data):
+                fileHandle?.write(data)
+                fileHandle?.synchronizeFile()
+                bytesRead = data.count
             }
-
-            let data = Data.init(bytes: buffer, count: bytesRead)
-            fileHandle?.write(data)
-            fileHandle?.synchronizeFile()
 
             if operation.isCancelled {
                 break
@@ -228,7 +234,6 @@ public class SessionDownloadTask: SessionTask {
         }
 
         // free(buffer)
-        buffer.deallocate(bytes: bufferSize, alignedTo: 1)
         fileHandle?.closeFile()
 
         if operation.isCancelled || self.state != .running {

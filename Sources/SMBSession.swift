@@ -9,7 +9,7 @@
 import libdsm
 
 public class SMBSession {
-    internal var rawSession = smb_session_new() {
+    private var rawSession = smb_session_new() {
         didSet {
             print("rawSession updated: \(String(describing: rawSession))")
         }
@@ -178,19 +178,6 @@ public class SMBSession {
         return nil
     }
 
-    internal func refreshConnection(smbSession refreshSession: OpaquePointer?) -> SMBSessionError? {
-        var err: SMBSessionError?
-        err = self.attemptConnectionWithSessionPointer(smbSession: refreshSession)
-
-        if err != nil {
-            return err
-        }
-
-        self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(refreshSession))
-
-        return nil
-    }
-
     private func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
 
         // if we're connecting from a dowload task, and the sessions match, make sure to refresh them periodically
@@ -259,6 +246,80 @@ public class SMBSession {
         self.dataQueue.cancelAllOperations()
     }
 
+    internal func treeConnect(volume: SMBVolume) -> Result<smb_tid> {
+        var treeId = smb_tid(0)
+        let x = smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &treeId)
+        if x != 0 {
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
+        return Result.success(treeId)
+    }
+
+    internal func treeDisconnect(treeId: smb_tid) -> SMBSessionError? {
+        let result = smb_tree_disconnect(self.rawSession, treeId)
+        if result != 0 {
+            return SMBSessionError.disconnectFailed
+        } else {
+            return nil
+        }
+    }
+
+    internal func fileStat(treeId: smb_tid, file: SMBFile) -> Result<SMBFile> {
+        let filePathCString = file.downloadPath.cString(using: .utf8)
+        guard let stat = smb_fstat(self.rawSession, treeId, filePathCString) else {
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
+        guard let resultFile = SMBFile(stat: stat, parentPath: file.path) else {
+            smb_stat_destroy(stat)
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
+        smb_stat_destroy(stat)
+        return Result.success(resultFile)
+    }
+
+    internal func fileClose(fileId: smb_fd) {
+        if fileId > 0 {
+            smb_fclose(self.rawSession, fileId)
+        }
+    }
+
+    internal func fileOpen(treeId: smb_tid, path: String, mod: UInt32) -> Result<smb_fd> {
+        var fd = smb_fd(0)
+        let openResult = smb_fopen(self.rawSession, treeId, path.cString(using: .utf8), mod, &fd)
+        if openResult != 0 {
+            return Result.failure(SMBSessionError.unableToConnect)
+        } else {
+            return Result.success(fd)
+        }
+    }
+
+    // @return The current read pointer position or -1 on error
+    internal func fileSeek(fileId: smb_fd, offset: UInt64) -> Result<Int> {
+        let result = smb_fseek(self.rawSession, fileId, Int64(offset), Int32(SMB_SEEK_SET))
+        if result < 0 {
+            return Result.failure(SMBSessionError.unableToConnect)
+        } else {
+            return Result.success(result)
+        }
+    }
+
+    internal func fileRead(fileId: smb_fd, bufferSize: UInt) -> Result<Data> {
+        let buffer = UnsafeMutableRawPointer.allocate(bytes: Int(bufferSize), alignedTo: 1)
+
+        let bytesRead = smb_fread(self.rawSession, fileId, buffer, Int(bufferSize))
+        if bytesRead < 0 {
+            return Result.failure(SMBSessionError.unableToConnect)
+        } else {
+            let data = Data(bytes: buffer, count: bytesRead)
+            buffer.deallocate(bytes: Int(bufferSize), alignedTo: 1)
+            return Result.success(data)
+        }
+    }
+
+    internal func fileWrite(fileId: smb_fd, buffer: UnsafeMutableRawPointer, bufferSize: Int) -> Int {
+        return smb_fwrite(self.rawSession, fileId, buffer, bufferSize)
+    }
+
     deinit {
         guard let s = self.rawSession else { return }
         smb_session_destroy(s)
@@ -276,6 +337,7 @@ extension SMBSession {
         case unableToResolveAddress
         case unableToConnect
         case authenticationFailed
+        case disconnectFailed
     }
 
     public enum Credentials {

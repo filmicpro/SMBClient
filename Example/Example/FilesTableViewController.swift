@@ -116,7 +116,6 @@ extension FilesTableViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let item = self.items?[indexPath.row] else { return }
-        guard let currentPath = self.path else { return }
 
         self.tableView.deselectRow(at: indexPath, animated: true)
 
@@ -126,21 +125,9 @@ extension FilesTableViewController: UITableViewDataSource {
             self.navigationController?.pushViewController(vc, animated: true)
             return
         case .directory(let directory):
-//            let newPath: String
-//            if currentPath != "/" {
-//                newPath = "\(currentPath)/\(directory.name)"
-//            } else {
-//                if currentPath == "/" {
-//                    newPath = "/\(directory.name)"
-//                } else {
-//                    newPath = "\(currentPath)/\(directory.name)"
-//                }
-//            }
-
             var newPath = self.path!
             newPath.append(directory: directory)
 
-//            let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: self.volume!, title: directory.name, path: newPath)
             let vc = UIStoryboard.fileTableViewController(session: self.session!, path: newPath, title: newPath.routablePath)
             self.navigationController?.pushViewController(vc, animated: true)
         }

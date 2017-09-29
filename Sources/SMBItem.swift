@@ -17,7 +17,7 @@ public enum SMBItem {
             guard let directory = SMBDirectory(stat: stat, parentPath: parentPath) else { return nil}
             self = .directory(directory)
         } else {
-            guard let file = SMBFile(stat: stat, session: session, parentPath: parentPath) else {
+            guard let file = SMBFile(stat: stat, parentPath: parentPath) else {
                 return nil
             }
             self = .file(file)

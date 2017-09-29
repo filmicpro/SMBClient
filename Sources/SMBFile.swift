@@ -11,7 +11,6 @@ import libdsm
 public struct SMBFile {
     public private(set) var path: SMBPath
 
-    var session: SMBSession
     public var name: String
 
     public var fileSize: UInt64
@@ -22,22 +21,20 @@ public struct SMBFile {
     public var writeAt: Date?
     public var modifiedAt: Date?
 
-    init?(stat: OpaquePointer, session: SMBSession, parentPath: SMBPath) {
+    init?(stat: OpaquePointer, parentPath: SMBPath) {
         self.path = parentPath
         guard let cName = smb_stat_name(stat) else { return nil }
         let pathAndFile = String(cString: cName).split(separator: "\\")
         guard let n = pathAndFile.last else { return nil }
         self.name = n.decomposedStringWithCanonicalMapping
 
-        self.session = session
         self.fileSize = smb_stat_get(stat, SMB_STAT_SIZE)
         self.allocationSize = smb_stat_get(stat, SMB_STAT_ALLOC_SIZE)
     }
 
-    init?(path: SMBPath, name: String, session: SMBSession) {
+    init?(path: SMBPath, name: String) {
         self.path = path
         self.name = name
-        self.session = session
         self.fileSize = 0
         self.allocationSize = 0
     }
