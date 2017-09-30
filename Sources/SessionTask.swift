@@ -24,14 +24,18 @@ public class SessionTask {
     }
 
     internal lazy var taskOperation: BlockOperation? = {
-        var result = BlockOperation()
-        result.addExecutionBlock {
-            self.performTaskWith(operation: result)
+        var operation = BlockOperation()
+        weak var weakOperaiton = operation
+
+        operation.addExecutionBlock {
+            if let wo = weakOperaiton {
+                self.performTaskWith(operation: wo)
+            }
         }
-        result.completionBlock = {
+        operation.completionBlock = { [unowned operation] in
             self.taskOperation = nil
         }
-        return result
+        return operation
     }()
 
     func performTaskWith(operation: BlockOperation) {
@@ -42,7 +46,7 @@ public class SessionTask {
     func request(file: SMBFile, inTree treeId: smb_tid) -> SMBFile? {
         let fileStat = self.session.fileStat(treeId: treeId, file: file)
         switch fileStat {
-        case .failure(_):
+        case .failure:
             return nil
         case .success(let f):
             return f

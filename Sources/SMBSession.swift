@@ -56,7 +56,10 @@ public class SMBSession {
         let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         shareCount.pointee = 0
 
-        smb_share_get_list(self.rawSession, &list, shareCount)
+        let getResult = smb_share_get_list(self.rawSession, &list, shareCount)
+        if getResult != 0 {
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
 
         if shareCount.pointee == 0 {
             return Result.success([])
@@ -79,6 +82,10 @@ public class SMBSession {
 
             i += 1
         }
+        smb_share_list_destroy(list)
+        list?.deallocate(capacity: <#T##Int#>)
+        shareCount.deallocate(capacity: 1)
+
         return Result.success(results)
     }
 
@@ -127,7 +134,10 @@ public class SMBSession {
         var i = 0
         while i < listCount {
             let item = smb_stat_list_at(statList, i)
-            guard let stat = item else { i = i + 1; continue }
+            guard let stat = item else {
+                i += 1
+                continue
+            }
             // guard let smbItem = SMBItem(stat: stat, session: self, parentDirectoryFilePath: relativePath) else {
             guard let smbItem = SMBItem(stat: stat, session: self, parentPath: path) else {
                 i += 1
@@ -140,6 +150,8 @@ public class SMBSession {
 
             i += 1
         }
+
+        smb_stat_list_destroy(statList)
 
         return Result.success(results)
     }
