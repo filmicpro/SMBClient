@@ -78,6 +78,7 @@ extension ServerDiscoveryViewController: UITableViewDataSource {
         let svr = self.servers[indexPath.row]
         let smbServer = SMBServer(hostname: svr.name, ipAddress: svr.ipAddress)
 
+        self.tableView.deselectRow(at: indexPath, animated: true)
         let vc = UIStoryboard.authViewController(server: smbServer)
         self.navigationController?.pushViewController(vc, animated: true)
     }

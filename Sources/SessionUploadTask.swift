@@ -60,7 +60,7 @@ public class SessionUploadTask: SessionTask {
         // ### connect to share
         let conn = self.session.treeConnect(volume: self.path.volume)
         switch conn {
-        case .failure(_):
+        case .failure:
             self.delegateError(.connectionFailed)
             return
         case .success(let t):
@@ -89,7 +89,7 @@ public class SessionUploadTask: SessionTask {
         // ### open the file handle
         let fileOpenResult = self.session.fileOpen(treeId: treeId, path: self.file!.uploadPath, mod: UInt32(SMB_MOD_RW))
         switch fileOpenResult {
-        case .failure(_):
+        case .failure:
             self.delegateError(SessionUploadTask.SessionUploadError.connectionFailed)
             self.cleanupBlock(treeId: treeId, fileId: fileId)
             return

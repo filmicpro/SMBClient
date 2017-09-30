@@ -51,8 +51,7 @@ public class SMBSession {
             return Result.failure(error)
         }
 
-        var list: smb_share_list? = smb_share_list.allocate(capacity: 1)
-
+        var list: smb_share_list? = nil
         let shareCount = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         shareCount.pointee = 0
 
@@ -82,8 +81,8 @@ public class SMBSession {
 
             i += 1
         }
+
         smb_share_list_destroy(list)
-        list?.deallocate(capacity: <#T##Int#>)
         shareCount.deallocate(capacity: 1)
 
         return Result.success(results)
