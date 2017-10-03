@@ -11,7 +11,7 @@ import libdsm
 
 typealias DiscoverCallback = @convention(c) (UnsafeMutableRawPointer?, OpaquePointer?) -> Void
 
-public protocol NetBIOSNameServiceDelegate {
+public protocol NetBIOSNameServiceDelegate: class {
     func added(entry: NetBIOSNameServiceEntry)
     func removed(entry: NetBIOSNameServiceEntry)
 }
@@ -20,7 +20,7 @@ public class NetBIOSNameService {
 
     private let nameService = netbios_ns_new()
 
-    public var delegate: NetBIOSNameServiceDelegate?
+    public weak var delegate: NetBIOSNameServiceDelegate?
 
     public init() { }
 

@@ -44,7 +44,7 @@ public class SMBSession {
         self.credentials = credentials
     }
 
-    public func requestVolumes() -> Result<[SMBVolume]> {
+    public func requestVolumes() -> Result<[SMBVolume], SMBSessionError> {
         let conError = self.attemptConnection()
         // switch result/error
         if let error = conError {
@@ -89,7 +89,7 @@ public class SMBSession {
     }
 
     public func requestVolumes(completionQueue: DispatchQueue = DispatchQueue.main,
-                               completion: @escaping (_ result: Result<[SMBVolume]>) -> Void) {
+                               completion: @escaping (_ result: Result<[SMBVolume], SMBSessionError>) -> Void) {
         let operation = BlockOperation()
         weak var weakOperation = operation
 
@@ -108,7 +108,7 @@ public class SMBSession {
         self.dataQueue.addOperation(operation)
     }
 
-    public func requestItems(atPath path: SMBPath) -> Result<[SMBItem]> {
+    public func requestItems(atPath path: SMBPath) -> Result<[SMBItem], SMBSessionError> {
         let conError = self.attemptConnection()
 
         if let error = conError {
@@ -157,7 +157,7 @@ public class SMBSession {
 
     public func requestItems(atPath path: SMBPath,
                              completionQueue: DispatchQueue = DispatchQueue.main,
-                             completion: @escaping (_ result: Result<[SMBItem]>) -> Void) {
+                             completion: @escaping (_ result: Result<[SMBItem], SMBSessionError>) -> Void) {
         let operation = BlockOperation()
         weak var weakOperation = operation
 
@@ -185,6 +185,7 @@ public class SMBSession {
         }
 
         self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(self.rawSession))
+        print("sessionGuestState: \(String(describing: self.sessionGuestState))")
 
         return nil
     }
@@ -257,7 +258,7 @@ public class SMBSession {
         self.dataQueue.cancelAllOperations()
     }
 
-    internal func treeConnect(volume: SMBVolume) -> Result<smb_tid> {
+    internal func treeConnect(volume: SMBVolume) -> Result<smb_tid, SMBSessionError> {
         var treeId = smb_tid(0)
         let x = smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &treeId)
         if x != 0 {
@@ -275,7 +276,7 @@ public class SMBSession {
         }
     }
 
-    internal func fileStat(treeId: smb_tid, file: SMBFile) -> Result<SMBFile> {
+    internal func fileStat(treeId: smb_tid, file: SMBFile) -> Result<SMBFile, SMBSessionError> {
         let filePathCString = file.downloadPath.cString(using: .utf8)
         guard let stat = smb_fstat(self.rawSession, treeId, filePathCString) else {
             return Result.failure(SMBSessionError.unableToConnect)
@@ -294,7 +295,7 @@ public class SMBSession {
         }
     }
 
-    internal func fileOpen(treeId: smb_tid, path: String, mod: UInt32) -> Result<smb_fd> {
+    internal func fileOpen(treeId: smb_tid, path: String, mod: UInt32) -> Result<smb_fd, SMBSessionError> {
         var fd = smb_fd(0)
         let openResult = smb_fopen(self.rawSession, treeId, path.cString(using: .utf8), mod, &fd)
         if openResult != 0 {
@@ -305,7 +306,7 @@ public class SMBSession {
     }
 
     // @return The current read pointer position or -1 on error
-    internal func fileSeek(fileId: smb_fd, offset: UInt64) -> Result<Int> {
+    internal func fileSeek(fileId: smb_fd, offset: UInt64) -> Result<Int, SMBSessionError> {
         let result = smb_fseek(self.rawSession, fileId, Int64(offset), Int32(SMB_SEEK_SET))
         if result < 0 {
             return Result.failure(SMBSessionError.unableToConnect)
@@ -314,7 +315,7 @@ public class SMBSession {
         }
     }
 
-    internal func fileRead(fileId: smb_fd, bufferSize: UInt) -> Result<Data> {
+    internal func fileRead(fileId: smb_fd, bufferSize: UInt) -> Result<Data, SMBSessionError> {
         let buffer = UnsafeMutableRawPointer.allocate(bytes: Int(bufferSize), alignedTo: 1)
 
         let bytesRead = smb_fread(self.rawSession, fileId, buffer, Int(bufferSize))
@@ -392,5 +393,19 @@ extension SMBSession: CustomDebugStringConvertible {
                "ipAddress : \(self.server.ipAddressString)\n" +
                "credentials : \(self.credentials)\n"
     }
+}
 
+extension SMBSession.SMBSessionError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .authenticationFailed:
+            return "Authentication failed"
+        case .disconnectFailed:
+            return "Disconnect failed"
+        case .unableToConnect:
+            return "Unable to connect"
+        case .unableToResolveAddress:
+            return "Unable to resolve address"
+        }
+    }
 }

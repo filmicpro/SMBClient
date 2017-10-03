@@ -21,7 +21,7 @@ public enum SessionDownloadError: Error {
     case invalidDestination
 }
 
-public protocol SessionDownloadTaskDelegate {
+public protocol SessionDownloadTaskDelegate: class {
     func downloadTask(didFinishDownloadingToPath: String)
     func downloadTask(totalBytesReceived: UInt64, totalBytesExpected: UInt64)
     func downloadTask(didCompleteWithError: SessionDownloadError)
@@ -33,6 +33,7 @@ public class SessionDownloadTask: SessionTask {
     var bytesReceived: UInt64?
     var bytesExpected: UInt64?
     var file: SMBFile?
+    public weak var delegate: SessionDownloadTaskDelegate?
 
     var tempPathForTemoraryDestination: String {
         let filename = self.hashForFilePath.appending("smb.data")
@@ -43,8 +44,6 @@ public class SessionDownloadTask: SessionTask {
         let filepath = self.sourceFile.path.routablePath.lowercased()
         return "\(filepath.hashValue)"
     }
-
-    public var delegate: SessionDownloadTaskDelegate?
 
     public init(session: SMBSession,
                 sourceFile: SMBFile,
@@ -116,7 +115,7 @@ public class SessionDownloadTask: SessionTask {
         // Connect to the volume/share
         let treeConnResult = self.session.treeConnect(volume: self.sourceFile.path.volume)
         switch treeConnResult {
-        case .failure(_):
+        case .failure:
             delegateError(.serverNotFound)
         case .success(let t):
             treeId = t
@@ -141,7 +140,7 @@ public class SessionDownloadTask: SessionTask {
         // ### Open file handle
         let fopen = self.session.fileOpen(treeId: treeId, path: file.downloadPath, mod: UInt32(SMB_MOD_READ))
         switch fopen {
-        case .failure(_):
+        case .failure:
             delegateError(.fileNotFound)
             self.cleanupBlock(treeId: treeId, fileId: 0)
             return
@@ -184,11 +183,11 @@ public class SessionDownloadTask: SessionTask {
         if let so = seekOffset, so > 0 {
             let fSeek = self.session.fileSeek(fileId: fileId, offset: so)
             switch fSeek {
-            case .failure(_):
+            case .failure:
                 delegateError(.downloadFailed)
                 self.cleanupBlock(treeId: treeId, fileId: fileId)
                 return
-            case .success(_):
+            case .success:
                 // TODO: this should probably update bytesReceived
                 // seekOffset == readPointer
                 break
@@ -202,7 +201,7 @@ public class SessionDownloadTask: SessionTask {
         repeat {
             let readResult = self.session.fileRead(fileId: fileId, bufferSize: UInt(bufferSize))
             switch readResult {
-            case .failure(_):
+            case .failure:
                 self.fail()
                 delegateError(.downloadFailed)
                 break

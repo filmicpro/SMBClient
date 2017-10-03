@@ -10,7 +10,7 @@ import Foundation
 
 import libdsm
 
-public protocol SessionUploadTaskDelegate {
+public protocol SessionUploadTaskDelegate: class {
     func uploadTask(didFinishUploading: SessionUploadTask)
     func uploadTask(_ task: SessionUploadTask, totalBytesSent: UInt64, totalBytesExpected: UInt64)
     func uploadTask(didCompleteWithError: SessionUploadTask.SessionUploadError)
@@ -20,8 +20,8 @@ public class SessionUploadTask: SessionTask {
     var path: SMBPath
     var fileName: String
     var data: Data
-    var delegate: SessionUploadTaskDelegate?
     var file: SMBFile?
+    public weak var delegate: SessionUploadTaskDelegate?
 
     public init(session: SMBSession,
                 delegateQueue: DispatchQueue = DispatchQueue.main,
