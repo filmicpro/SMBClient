@@ -61,8 +61,18 @@ class FilesTableViewController: UIViewController {
         let uploadPath = "\(path)/\(UUID().uuidString).txt"
         guard let data = uploadPath.data(using: .utf8) else { return }
 
-        let uploadTask = session.uploadTaskForFile(toPath: path, withName: fileName, data: data, delegate: self)
-        uploadTask.resume()
+        session.uploadTaskForData(toPath: path,
+                                  withName: fileName,
+                                  data: data,
+                                  delegate: self)
+
+//        let fileURL = URL(fileURLWithPath: "pathtolargefile")
+//        session.updateTaskForFile(toPath: path,
+//                                  withName: "nameext",
+//                                  uploadExtension: ".upload",
+//                                  fromURL: fileURL,
+//                                  delegate: self)
+
     }
 
 }
@@ -74,11 +84,15 @@ extension FilesTableViewController: SessionUploadTaskDelegate {
     }
 
     func uploadTask(didCompleteWithError: SessionUploadTask.SessionUploadError) {
-        print("error uploading: \(didCompleteWithError)")
+        let alert = UIAlertController(title: "error", message: didCompleteWithError.localizedDescription, preferredStyle: .alert)
+        let ok = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alert.addAction(ok)
+        self.present(alert, animated: true, completion: nil)
     }
 
     func uploadTask(_ task: SessionUploadTask, totalBytesSent: UInt64, totalBytesExpected: UInt64) {
-        print("progress uploading!")
+        let percent = Double(totalBytesSent) / Double(totalBytesExpected)
+        print("progress uploading - \(percent)")
     }
 }
 

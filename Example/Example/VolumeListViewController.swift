@@ -37,8 +37,6 @@ class VolumeListViewController: UIViewController {
                 case .success(let volumes):
                     self.volumes = volumes
                 case .failure(let error):
-                    print("VolumeListViewController failed to load volumes: \(error)")
-
                     let alert = UIAlertController(title: "error", message: error.description, preferredStyle: .alert)
                     let ok = UIAlertAction(title: "OK", style: .default, handler: { (_) in
                         self.navigationController?.popViewController(animated: true)
@@ -82,7 +80,6 @@ extension VolumeListViewController: UITableViewDelegate {
 
         let volume = self.volumes[indexPath.row]
 
-//        let vc = UIStoryboard.fileTableViewController(session: self.session!, volume: volume, title: volume.name, path: "/")
         let vc = UIStoryboard.fileTableViewController(session: self.session!, path: volume.path, title: volume.name)
         self.navigationController?.pushViewController(vc, animated: true)
     }

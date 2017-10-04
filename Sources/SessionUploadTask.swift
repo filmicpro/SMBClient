@@ -19,6 +19,7 @@ public protocol SessionUploadTaskDelegate: class {
 public class SessionUploadTask: SessionTask {
     var path: SMBPath
     var fileName: String
+    var uploadExtension: String? // appending .upload to upload file name, then move
     var data: Data
     var file: SMBFile?
     public weak var delegate: SessionUploadTaskDelegate?
@@ -27,10 +28,12 @@ public class SessionUploadTask: SessionTask {
                 delegateQueue: DispatchQueue = DispatchQueue.main,
                 path: SMBPath,
                 fileName: String,
+                uploadExtension: String? = nil,
                 data: Data,
                 delegate: SessionUploadTaskDelegate? = nil) {
         self.path = path
         self.fileName = fileName
+        self.uploadExtension = uploadExtension
         self.data = data
         self.delegate = delegate
         super.init(session: session, delegateQueue: delegateQueue)
@@ -49,13 +52,6 @@ public class SessionUploadTask: SessionTask {
 
         var treeId = smb_tid(0)
         var fileId = smb_fd(0)
-
-        // ### confirm server is still available
-        let smbSessionError = self.session.attemptConnection()
-        if smbSessionError != nil {
-            self.delegateError(.serverNotFound)
-            return
-        }
 
         // ### connect to share
         let conn = self.session.treeConnect(volume: self.path.volume)
@@ -87,7 +83,11 @@ public class SessionUploadTask: SessionTask {
             SMB_MOD_WRITE_ATTR |
             SMB_MOD_READ_CTL
         // ### open the file handle
-        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: self.file!.uploadPath, mod: UInt32(SMB_MOD_RW))
+        guard let uploadPath = self.fileUploadPath else {
+            self.delegateError(SessionUploadTask.SessionUploadError.fileNotFound)
+            return
+        }
+        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_RW))
         switch fileOpenResult {
         case .failure:
             self.delegateError(SessionUploadTask.SessionUploadError.connectionFailed)
@@ -104,31 +104,55 @@ public class SessionUploadTask: SessionTask {
         }
 
         var bytes = [UInt8](self.data)
-        let bufferSize = bytes.count
+        let totalByteCount = bytes.count
 
         var uploadBufferLimit = min(bytes.count, 63488)
         var bytesWritten = 0
         var totalBytesWritten = 0
 
         repeat {
-            if bufferSize - totalBytesWritten < uploadBufferLimit {
-                uploadBufferLimit = bufferSize - totalBytesWritten
+            if totalByteCount - totalBytesWritten < uploadBufferLimit {
+                uploadBufferLimit = totalByteCount - totalBytesWritten
             }
 
             let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
 
-            bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr, bufferSize: uploadBufferLimit)
+            bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr+totalBytesWritten, bufferSize: uploadBufferLimit)
+            // bytesWritten == -1, console output is 'netbios_session_packet_recv: : Network is down'
             if bytesWritten < 0 {
+                print("bytesWritten error code: \(bytesWritten)")
                 fail()
                 self.delegateError(.uploadFailed)
+                bytes = []
                 break
+            }
+            self.delegateQueue.async {
+                self.delegate?.uploadTask(self, totalBytesSent: UInt64(totalBytesWritten), totalBytesExpected: UInt64(totalByteCount))
             }
 
             totalBytesWritten += bytesWritten
-        } while (totalBytesWritten < bufferSize)
+        } while (totalBytesWritten < totalByteCount)
 
         bytes = []
+
+        // if there was an upload extension move the file to remove the extension
+        if self.uploadExtension != nil, let destPath = self.file?.uploadPath {
+            let moveError = self.session.fileMove(volume: self.path.volume, oldPath: uploadPath, newPath: destPath)
+            if moveError != nil {
+                self.delegateError(.uploadFailed)
+                return
+            }
+        }
         self.didFinish()
+    }
+
+    private var fileUploadPath: String? {
+        guard let f = self.file else { return nil }
+        if let ue = self.uploadExtension {
+            return f.uploadPath.appending(ue)
+        } else {
+            return f.uploadPath
+        }
     }
 
     func didFinish() {

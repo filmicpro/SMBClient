@@ -244,14 +244,35 @@ public class SMBSession {
     }
 
     // uploadTaskForFile(toPath: path, withName: fileName, data: data, delegate: self)
-    @discardableResult public func uploadTaskForFile(toPath path: SMBPath,
+    @discardableResult public func uploadTaskForData(toPath path: SMBPath,
                                                      withName fileName: String,
+                                                     uploadExtension: String? = nil,
                                                      data: Data,
                                                      delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
-        let task = SessionUploadTask(session: self, path: path, fileName: fileName, data: data)
+        let task = SessionUploadTask(session: self, path: path, fileName: fileName, uploadExtension: uploadExtension, data: data)
+
         task.delegate = delegate
         self.uploadTasks.append(task)
+        task.resume()
         return task
+    }
+
+    @discardableResult public func updateTaskForFile(toPath path: SMBPath,
+                                                     withName fileName: String,
+                                                     uploadExtension: String? = nil,
+                                                     fromURL url: URL,
+                                                     delegate: SessionUploadTaskDelegate?) -> Result<SessionUploadTask, SessionUploadTask.SessionUploadError> {
+        let handle: FileHandle
+        do {
+            handle = try FileHandle(forReadingFrom: url)
+        } catch {
+            return Result.failure(SessionUploadTask.SessionUploadError.fileNotFound)
+        }
+
+        let task = SessionUploadTask(session: self, path: path, fileName: fileName, uploadExtension: uploadExtension, data: handle.availableData, delegate: delegate)
+        self.uploadTasks.append(task)
+        task.resume()
+        return Result.success(task)
     }
 
     func cancelAllRequests() {
@@ -260,6 +281,12 @@ public class SMBSession {
 
     internal func treeConnect(volume: SMBVolume) -> Result<smb_tid, SMBSessionError> {
         var treeId = smb_tid(0)
+        // ### confirm server is still available
+        let smbSessionError = self.attemptConnection()
+        if smbSessionError != nil {
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
+
         let x = smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &treeId)
         if x != 0 {
             return Result.failure(SMBSessionError.unableToConnect)
@@ -303,6 +330,30 @@ public class SMBSession {
         } else {
             return Result.success(fd)
         }
+    }
+
+    internal func fileMove(volume: SMBVolume, oldPath: String, newPath: String) -> SMBMoveError? {
+        var treeId = smb_tid(0)
+
+        let smbSessionError = self.attemptConnection()
+        if smbSessionError != nil {
+            return SMBMoveError.failed
+        }
+
+        // ### connect to share
+        let conn = self.treeConnect(volume: volume)
+        switch conn {
+        case .failure:
+            return SMBMoveError.failed
+        case .success(let t):
+            treeId = t
+        }
+
+        let mvResult = smb_file_mv(self.rawSession, treeId, oldPath.cString(using: .utf8), newPath.cString(using: .utf8))
+        if mvResult != 0 {
+            return SMBMoveError.failed
+        }
+        return nil
     }
 
     // @return The current read pointer position or -1 on error
@@ -350,6 +401,10 @@ extension SMBSession {
         case unableToConnect
         case authenticationFailed
         case disconnectFailed
+    }
+
+    public enum SMBMoveError: Error {
+        case failed
     }
 
     public enum Credentials {
