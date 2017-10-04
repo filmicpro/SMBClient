@@ -18,6 +18,7 @@ public enum SessionDownloadError: Error {
     case fileNotFound
     case serverNotFound
     case downloadFailed
+    case lostConnection
     case invalidDestination
 }
 
@@ -29,7 +30,7 @@ public protocol SessionDownloadTaskDelegate: class {
 
 public class SessionDownloadTask: SessionTask {
     var sourceFile: SMBFile
-    var destinationFilePath: String?
+    var destinationFileURL: URL?
     var bytesReceived: UInt64?
     var bytesExpected: UInt64?
     var file: SMBFile?
@@ -47,10 +48,10 @@ public class SessionDownloadTask: SessionTask {
 
     public init(session: SMBSession,
                 sourceFile: SMBFile,
-                destinationFilePath: String? = nil,
+                destinationFileURL: URL? = nil,
                 delegate: SessionDownloadTaskDelegate? = nil) {
         self.sourceFile = sourceFile
-        self.destinationFilePath = destinationFilePath
+        self.destinationFileURL = destinationFileURL
         self.delegate = delegate
         super.init(session: session)
     }
@@ -62,21 +63,20 @@ public class SessionDownloadTask: SessionTask {
     }
 
     private var finalFilePathForDownloadedFile: URL? {
-        guard let dest = self.destinationFilePath else { return nil }
-        let path = URL(fileURLWithPath: dest.replacingOccurrences(of: "file://", with: ""))
+        guard let dest = self.destinationFileURL else { return nil }
 
-        var fileName = path.lastPathComponent
+        var fileName = dest.lastPathComponent
         let isFile = fileName.contains(".") && fileName.characters.first != "."
 
         let folderPath: URL
         if isFile {
-            folderPath = path.deletingLastPathComponent()
+            folderPath = dest.deletingLastPathComponent()
         } else {
             fileName = self.sourceFile.name
-            folderPath = path
+            folderPath = dest
         }
 
-        var newFilePath = path
+        var newFilePath = dest
         var newFileName = fileName
 
         var index = 0
@@ -98,20 +98,6 @@ public class SessionDownloadTask: SessionTask {
         var treeId = smb_tid(0)
         var fileId = smb_fd(0)
 
-        // Connect to SMB Server
-        var connectError: SMBSession.SMBSessionError? = nil
-        connectError = self.session.attemptConnection()
-        if connectError != nil {
-            delegateError(.serverNotFound)
-            self.cleanupBlock(treeId: treeId, fileId: fileId)
-            return
-        }
-
-        if operation.isCancelled {
-            self.cleanupBlock(treeId: treeId, fileId: fileId)
-            return
-        }
-
         // Connect to the volume/share
         let treeConnResult = self.session.treeConnect(volume: self.sourceFile.path.volume)
         switch treeConnResult {
@@ -119,6 +105,11 @@ public class SessionDownloadTask: SessionTask {
             delegateError(.serverNotFound)
         case .success(let t):
             treeId = t
+        }
+
+        if operation.isCancelled {
+            self.cleanupBlock(treeId: treeId, fileId: fileId)
+            return
         }
 
         self.file = self.request(file: sourceFile, inTree: treeId)
@@ -162,7 +153,9 @@ public class SessionDownloadTask: SessionTask {
                                                     withIntermediateDirectories: true,
                                                     attributes: nil)
         } catch {
-            // return error TODO
+            self.delegateError(.invalidDestination)
+            fail()
+            return
         }
 
         if self.canBeResumed == false {
@@ -201,10 +194,17 @@ public class SessionDownloadTask: SessionTask {
         repeat {
             let readResult = self.session.fileRead(fileId: fileId, bufferSize: UInt(bufferSize))
             switch readResult {
-            case .failure:
+            case .failure(let err):
                 self.fail()
-                delegateError(.downloadFailed)
-                break
+
+                switch err {
+                case .unableToConnect:
+                    delegateError(.lostConnection)
+                default:
+                    delegateError(.downloadFailed)
+                }
+                fileHandle?.closeFile()
+                return
             case .success(let data):
                 fileHandle?.write(data)
                 fileHandle?.synchronizeFile()
@@ -222,7 +222,7 @@ public class SessionDownloadTask: SessionTask {
             }
         } while (bytesRead > 0)
 
-        // Set the modification date to match the one on the SMB device so we can compare thetwo at a later date
+        // Set the modification date to match the one on the SMB device so we can compare the two at a later date
         do {
             if let modAt = file.modifiedAt {
                 try FileManager.default.setAttributes([FileAttributeKey.modificationDate: modAt],

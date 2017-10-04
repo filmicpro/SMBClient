@@ -26,15 +26,14 @@ class DownloadProgressViewController: UIViewController {
 
         guard let destFolder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last else { return }
         guard let file = self.file else { return }
-        let fileURL = URL(fileURLWithPath: file.name)
+        let fileURL = destFolder.appendingPathComponent(file.name)
         let fileName = fileURL.lastPathComponent
 
         self.fileLabel.text = fileName
 
-        self.task = self.session?.downloadTaskForFile(file: file, destinationPath: destFolder.absoluteString + fileName, delegate: self)
-        if let t = self.task {
-            t.resume()
-        }
+        self.task = self.session?.downloadTaskForFile(file: file,
+                                                      destinationFileURL: fileURL,
+                                                      delegate: self)
     }
 
     override func didReceiveMemoryWarning() {
@@ -68,5 +67,9 @@ extension DownloadProgressViewController: SessionDownloadTaskDelegate {
     }
     func downloadTask(didCompleteWithError: SessionDownloadError) {
         print("error: \(didCompleteWithError)")
+        let alert = UIAlertController(title: "error", message: didCompleteWithError.localizedDescription, preferredStyle: .alert)
+        let ok = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alert.addAction(ok)
+        self.present(alert, animated: true, completion: nil)
     }
 }

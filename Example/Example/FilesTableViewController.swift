@@ -14,8 +14,6 @@ class FilesTableViewController: UIViewController {
 
     var session: SMBSession?
     var path: SMBPath?
-//    var volume: SMBVolume?
-//    var path: String?
     var items: [SMBItem]? {
         didSet {
             self.tableView.reloadData()
@@ -31,7 +29,6 @@ class FilesTableViewController: UIViewController {
 
         guard let session = self.session else { return }
         guard let path = self.path else { return }
-//        guard let volume = self.volume else { return }
 
         self.title = "Loading..."
 

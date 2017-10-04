@@ -109,20 +109,21 @@ public class SMBSession {
     }
 
     public func requestItems(atPath path: SMBPath) -> Result<[SMBItem], SMBSessionError> {
-        let conError = self.attemptConnection()
+        var treeId = smb_tid(0)
 
-        if let error = conError {
+        let connectResult = self.treeConnect(volume: path.volume)
+        switch connectResult {
+        case .success(let tid):
+            treeId = tid
+        case .failure(let error):
             return Result.failure(error)
         }
 
-        var shareId: UInt16 = smb_tid.max
-        smb_tree_connect(self.rawSession, path.volume.name.cString(using: .utf8), &shareId)
-        if shareId == smb_tid.max {
-            return Result.success([])
-        }
-
         // \SampleMedia\*
-        let statList = smb_find(self.rawSession, shareId, path.searchPath.cString(using: .utf8))
+        let statList = smb_find(self.rawSession, treeId, path.searchPath.cString(using: .utf8))
+        if statList == nil {
+            return Result.failure(SMBSessionError.unableToConnect)
+        }
         let listCount = smb_stat_list_count(statList)
         if listCount == 0 {
             return Result.success([])
@@ -216,6 +217,7 @@ public class SMBSession {
                                                    server.hostname.cString(using: .utf8),
                                                    server.ipAddress,
                                                    Int32(SMB_TRANSPORT_TCP))
+        // connectionResult == -3 on timeout
         if connectionResult != 0 {
             return SMBSessionError.unableToConnect
         }
@@ -232,14 +234,15 @@ public class SMBSession {
         return nil
     }
 
-    public func downloadTaskForFile(file: SMBFile,
-                                    destinationPath: String?,
-                                    delegate: SessionDownloadTaskDelegate?) -> SessionDownloadTask {
+    @discardableResult public func downloadTaskForFile(file: SMBFile,
+                                                       destinationFileURL: URL?,
+                                                       delegate: SessionDownloadTaskDelegate?) -> SessionDownloadTask {
         let task = SessionDownloadTask(session: self,
                                        sourceFile: file,
-                                       destinationFilePath: destinationPath,
+                                       destinationFileURL: destinationFileURL,
                                        delegate: delegate)
         self.downloadTasks.append(task)
+        task.resume()
         return task
     }
 
@@ -249,15 +252,18 @@ public class SMBSession {
                                                      uploadExtension: String? = nil,
                                                      data: Data,
                                                      delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
-        let task = SessionUploadTask(session: self, path: path, fileName: fileName, uploadExtension: uploadExtension, data: data)
-
-        task.delegate = delegate
+        let task = SessionUploadTask(session: self,
+                                     path: path,
+                                     fileName: fileName,
+                                     uploadExtension: uploadExtension,
+                                     data: data,
+                                     delegate: delegate)
         self.uploadTasks.append(task)
         task.resume()
         return task
     }
 
-    @discardableResult public func updateTaskForFile(toPath path: SMBPath,
+    @discardableResult public func uploadTaskForFile(toPath path: SMBPath,
                                                      withName fileName: String,
                                                      uploadExtension: String? = nil,
                                                      fromURL url: URL,
@@ -269,7 +275,12 @@ public class SMBSession {
             return Result.failure(SessionUploadTask.SessionUploadError.fileNotFound)
         }
 
-        let task = SessionUploadTask(session: self, path: path, fileName: fileName, uploadExtension: uploadExtension, data: handle.availableData, delegate: delegate)
+        let task = SessionUploadTask(session: self,
+                                     path: path,
+                                     fileName: fileName,
+                                     uploadExtension: uploadExtension,
+                                     data: handle.availableData,
+                                     delegate: delegate)
         self.uploadTasks.append(task)
         task.resume()
         return Result.success(task)
