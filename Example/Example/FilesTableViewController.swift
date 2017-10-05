@@ -53,22 +53,22 @@ class FilesTableViewController: UIViewController {
         guard let session = self.session else { return }
         guard let path = self.path else { return }
 
-        let fileName = "\(UUID().uuidString).txt"
+//        let fileName = "\(UUID().uuidString).txt"
+//
+//        let uploadPath = "\(path)/\(UUID().uuidString).txt"
+//        guard let data = uploadPath.data(using: .utf8) else { return }
 
-        let uploadPath = "\(path)/\(UUID().uuidString).txt"
-        guard let data = uploadPath.data(using: .utf8) else { return }
-
-        session.uploadTaskForData(toPath: path,
-                                  withName: fileName,
-                                  data: data,
-                                  delegate: self)
-
-//        let fileURL = URL(fileURLWithPath: "pathtolargefile")
-//        session.updateTaskForFile(toPath: path,
-//                                  withName: "nameext",
-//                                  uploadExtension: ".upload",
-//                                  fromURL: fileURL,
+//        session.uploadTaskForData(toPath: path,
+//                                  withName: fileName,
+//                                  data: data,
 //                                  delegate: self)
+
+        let fileURL = URL(fileURLWithPath: "/Users/sfaxon/Downloads/Recovery/SethAndSara/09242017_182204.mov")
+        session.uploadTaskForFile(toPath: path,
+                                  withName: "09242017_182204.mov",
+                                  uploadExtension: ".upload",
+                                  fromURL: fileURL,
+                                  delegate: self)
 
     }
 

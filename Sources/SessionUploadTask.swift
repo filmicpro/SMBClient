@@ -78,7 +78,8 @@ public class SessionUploadTask: SessionTask {
         let SMB_MOD_RW = SMB_MOD_READ |
             SMB_MOD_WRITE |
             SMB_MOD_APPEND |
-            SMB_MOD_READ_EXT + SMB_MOD_WRITE_EXT |
+            SMB_MOD_READ_EXT |
+            SMB_MOD_WRITE_EXT |
             SMB_MOD_READ_ATTR |
             SMB_MOD_WRITE_ATTR |
             SMB_MOD_READ_CTL
@@ -120,7 +121,6 @@ public class SessionUploadTask: SessionTask {
             bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr+totalBytesWritten, bufferSize: uploadBufferLimit)
             // bytesWritten == -1, console output is 'netbios_session_packet_recv: : Network is down'
             if bytesWritten < 0 {
-                print("bytesWritten error code: \(bytesWritten)")
                 fail()
                 self.delegateError(.uploadFailed)
                 bytes = []
@@ -134,6 +134,8 @@ public class SessionUploadTask: SessionTask {
         } while (totalBytesWritten < totalByteCount)
 
         bytes = []
+
+        self.session.fileClose(fileId: fileId)
 
         // if there was an upload extension move the file to remove the extension
         if self.uploadExtension != nil, let destPath = self.file?.uploadPath {
@@ -156,6 +158,7 @@ public class SessionUploadTask: SessionTask {
     }
 
     func didFinish() {
+        self.state = .completed
         self.delegateQueue.async {
             self.delegate?.uploadTask(didFinishUploading: self)
         }
