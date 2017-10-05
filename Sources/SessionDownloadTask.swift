@@ -34,6 +34,7 @@ public class SessionDownloadTask: SessionTask {
     var bytesReceived: UInt64?
     var bytesExpected: UInt64?
     var file: SMBFile?
+    let appendDestinationFileNameIfExists: Bool
     public weak var delegate: SessionDownloadTaskDelegate?
 
     var tempPathForTemoraryDestination: String {
@@ -49,14 +50,16 @@ public class SessionDownloadTask: SessionTask {
     public init(session: SMBSession,
                 sourceFile: SMBFile,
                 destinationFileURL: URL? = nil,
+                appendDestinationFileNameIfExists: Bool = true,
                 delegate: SessionDownloadTaskDelegate? = nil) {
         self.sourceFile = sourceFile
         self.destinationFileURL = destinationFileURL
+        self.appendDestinationFileNameIfExists = appendDestinationFileNameIfExists
         self.delegate = delegate
         super.init(session: session)
     }
 
-    func delegateError(_ error: SessionDownloadError) {
+    private func delegateError(_ error: SessionDownloadError) {
         self.delegateQueue.async {
             self.delegate?.downloadTask(didCompleteWithError: error)
         }
@@ -80,11 +83,17 @@ public class SessionDownloadTask: SessionTask {
         var newFileName = fileName
 
         var index = 0
-        while FileManager.default.fileExists(atPath: newFilePath.absoluteString) {
-            let fileNameURL = URL(fileURLWithPath: fileName)
-            index += 1
-            newFileName = "\(fileNameURL.deletingPathExtension())-\(index).\(fileNameURL.pathExtension)"
-            newFilePath = folderPath.appendingPathComponent(newFileName)
+        if self.appendDestinationFileNameIfExists {
+            while FileManager.default.fileExists(atPath: newFilePath.path) {
+                let fileNameURL = URL(fileURLWithPath: fileName)
+                index += 1
+                if fileNameURL.pathExtension != "" {
+                    newFileName = "\(fileNameURL.deletingPathExtension().relativeString)-\(index).\(fileNameURL.pathExtension)"
+                } else {
+                    newFileName = "\(fileNameURL.deletingPathExtension().relativeString)-\(index)"
+                }
+                newFilePath = folderPath.appendingPathComponent(newFileName)
+            }
         }
         return newFilePath
     }
@@ -158,7 +167,7 @@ public class SessionDownloadTask: SessionTask {
             return
         }
 
-        if self.canBeResumed == false {
+        if !self.canBeResumed {
             FileManager.default.createFile(atPath: self.tempPathForTemoraryDestination, contents: nil, attributes: nil)
         }
 
@@ -179,17 +188,21 @@ public class SessionDownloadTask: SessionTask {
             case .failure:
                 delegateError(.downloadFailed)
                 self.cleanupBlock(treeId: treeId, fileId: fileId)
+                do {
+                    try FileManager.default.removeItem(atPath: self.tempPathForTemoraryDestination)
+                } catch { }
                 return
-            case .success:
+            case .success(let readBytes):
                 // TODO: this should probably update bytesReceived
-                // seekOffset == readPointer
-                break
+                self.bytesReceived = UInt64(readBytes)
             }
         }
 
         // ### Download bytes
         var bytesRead: Int = 0
         let bufferSize: Int = 65535
+
+        var didAlreadyError = false
 
         repeat {
             let readResult = self.session.fileRead(fileId: fileId, bufferSize: UInt(bufferSize))
@@ -203,8 +216,8 @@ public class SessionDownloadTask: SessionTask {
                 default:
                     delegateError(.downloadFailed)
                 }
-                fileHandle?.closeFile()
-                return
+                didAlreadyError = true
+                break
             case .success(let data):
                 fileHandle?.write(data)
                 fileHandle?.synchronizeFile()
@@ -232,12 +245,13 @@ public class SessionDownloadTask: SessionTask {
             // updating the timestamp doesn't matter that much
         }
 
-        // free(buffer)
         fileHandle?.closeFile()
 
         if operation.isCancelled || self.state != .running {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
-            delegateError(.cancelled)
+            if !didAlreadyError {
+                delegateError(.cancelled)
+            }
             return
         }
 
@@ -255,6 +269,26 @@ public class SessionDownloadTask: SessionTask {
             self.delegate?.downloadTask(didFinishDownloadingToPath: finalDestination.absoluteString)
         }
         self.cleanupBlock(treeId: treeId, fileId: fileId)
+    }
+
+    override var canBeResumed: Bool {
+        if !FileManager.default.fileExists(atPath: self.tempPathForTemoraryDestination) {
+            return false
+        }
+
+        var tempModifiedAt: Date?
+
+        do {
+            let attrs = try FileManager.default.attributesOfItem(atPath: self.tempPathForTemoraryDestination)
+            tempModifiedAt = attrs[FileAttributeKey.modificationDate] as? Date
+        } catch {
+            return false
+        }
+
+        if tempModifiedAt != nil && tempModifiedAt == self.file?.modifiedAt {
+            return true
+        }
+        return false
     }
 
     func suspend() {

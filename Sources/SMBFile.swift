@@ -30,6 +30,11 @@ public struct SMBFile {
 
         self.fileSize = smb_stat_get(stat, SMB_STAT_SIZE)
         self.allocationSize = smb_stat_get(stat, SMB_STAT_ALLOC_SIZE)
+
+        self.createdAt = SMBFile.dateFrom(timestamp: smb_stat_get(stat, SMB_STAT_CTIME))
+        self.modifiedAt = SMBFile.dateFrom(timestamp: smb_stat_get(stat, SMB_STAT_MTIME))
+        self.accessedAt = SMBFile.dateFrom(timestamp: smb_stat_get(stat, SMB_STAT_ATIME))
+        self.writeAt = SMBFile.dateFrom(timestamp: smb_stat_get(stat, SMB_STAT_WTIME))
     }
 
     init?(path: SMBPath, name: String) {
@@ -53,5 +58,21 @@ public struct SMBFile {
     internal var downloadPath: String {
         let slash = "\\"
         return slash + self.uploadPath
+    }
+
+    fileprivate static func dateFrom(timestamp: UInt64) -> Date? {
+        var base = DateComponents()
+        base.day = 1
+        base.month = 1
+        base.year = 1601
+        base.era = 1
+
+        let calendar = Calendar(identifier: .gregorian)
+        let baseDate = calendar.date(from: base)
+
+        let newTimestamp: TimeInterval = TimeInterval(timestamp) / 10000000
+        let result = baseDate?.addingTimeInterval(newTimestamp)
+
+        return result
     }
 }

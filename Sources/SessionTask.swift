@@ -13,7 +13,11 @@ import libdsm
 public class SessionTask {
     var session: SMBSession
     var delegateQueue: DispatchQueue
-    var canBeResumed: Bool = false
+    var canBeResumed: Bool {
+        get {
+            return false
+        }
+    }
     var state: SessionTaskState = .ready
 
     internal var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
