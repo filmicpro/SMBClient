@@ -367,6 +367,31 @@ public class SMBSession {
         return nil
     }
 
+    internal func fileDelete(volume: SMBVolume, path: String) -> SMBDeleteError? {
+        var treeId = smb_tid(0)
+
+        let smbSessionError = self.attemptConnection()
+        if smbSessionError != nil {
+            return SMBDeleteError.failed
+        }
+
+        // ### connect to share
+        let conn = self.treeConnect(volume: volume)
+        switch conn {
+        case .failure:
+            return SMBDeleteError.failed
+        case .success(let t):
+            treeId = t
+        }
+
+        let result = smb_file_rm(self.rawSession, treeId, path.cString(using: .utf8))
+        if result == 0 {
+            return nil
+        } else {
+            return SMBDeleteError.failed
+        }
+    }
+
     // @return The current read pointer position or -1 on error
     internal func fileSeek(fileId: smb_fd, offset: UInt64) -> Result<Int, SMBSessionError> {
         let result = smb_fseek(self.rawSession, fileId, Int64(offset), Int32(SMB_SEEK_SET))
@@ -415,6 +440,10 @@ extension SMBSession {
     }
 
     public enum SMBMoveError: Error {
+        case failed
+    }
+
+    public enum SMBDeleteError: Error {
         case failed
     }
 

@@ -20,6 +20,8 @@ class FilesTableViewController: UIViewController {
         }
     }
 
+    var task: SessionUploadTask?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -53,30 +55,34 @@ class FilesTableViewController: UIViewController {
         guard let session = self.session else { return }
         guard let path = self.path else { return }
 
-//        let fileName = "\(UUID().uuidString).txt"
-//
-//        let uploadPath = "\(path)/\(UUID().uuidString).txt"
-//        guard let data = uploadPath.data(using: .utf8) else { return }
+        let fileName = "\(UUID().uuidString).txt"
 
-//        session.uploadTaskForData(toPath: path,
-//                                  withName: fileName,
-//                                  data: data,
-//                                  delegate: self)
+        let uploadPath = "\(path)/\(UUID().uuidString).txt"
+        guard let data = uploadPath.data(using: .utf8) else { return }
 
-        let fileURL = URL(fileURLWithPath: "/Users/sfaxon/Downloads/Recovery/SethAndSara/09242017_182204.mov")
-        session.uploadTaskForFile(toPath: path,
-                                  withName: "09242017_182204.mov",
-                                  uploadExtension: ".upload",
-                                  fromURL: fileURL,
+        session.uploadTaskForData(toPath: path,
+                                  withName: fileName,
+                                  data: data,
                                   delegate: self)
 
+//        let fileURL = URL(fileURLWithPath: "absolutePathOfLargeFile")
+//        let t = session.uploadTaskForFile(toPath: path,
+//                                  withName: "largeFileName",
+//                                  uploadExtension: ".upload",
+//                                  fromURL: fileURL,
+//                                  delegate: self)
+        switch t {
+        case .success(let task):
+            self.task = task
+        case .failure:
+            print("FilesTabelViewController: task failed to create")
+        }
     }
 
 }
 
 extension FilesTableViewController: SessionUploadTaskDelegate {
     func uploadTask(didFinishUploading: SessionUploadTask) {
-        //
         print("did finish uploading")
     }
 
@@ -90,6 +96,11 @@ extension FilesTableViewController: SessionUploadTaskDelegate {
     func uploadTask(_ task: SessionUploadTask, totalBytesSent: UInt64, totalBytesExpected: UInt64) {
         let percent = Double(totalBytesSent) / Double(totalBytesExpected)
         print("progress uploading - \(percent)")
+
+//        let timer = Timer(timeInterval: TimeInterval(20), repeats: false) { (_) in
+//            self.task?.cancel()
+//        }
+//        timer.fire()
     }
 }
 

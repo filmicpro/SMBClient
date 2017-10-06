@@ -71,7 +71,11 @@ public class SessionUploadTask: SessionTask {
             return
         }
 
-        let SMB_MOD_READ_WRITE = SMB_MOD_READ | SMB_MOD_WRITE | SMB_MOD_APPEND
+        let SMB_MOD_READ_WRITE_NEW_FILE = SMB_MOD_READ | SMB_MOD_WRITE | SMB_MOD_APPEND
+            | SMB_MOD_READ_EXT | SMB_MOD_WRITE_EXT
+            | SMB_MOD_READ_ATTR | SMB_MOD_WRITE_ATTR
+            | SMB_MOD_READ_CTL
+        let SMB_MOD_READ_WRITE_EXISTING_FILE = SMB_MOD_READ | SMB_MOD_WRITE | SMB_MOD_APPEND
             | SMB_MOD_READ_ATTR | SMB_MOD_WRITE_ATTR
             | SMB_MOD_READ_CTL
 
@@ -93,7 +97,12 @@ public class SessionUploadTask: SessionTask {
             totalBytesWritten = Int(previousUpload.fileSize)
         }
 
-        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_READ_WRITE))
+        let fileOpenResult: Result<smb_fd, SMBSession.SMBSessionError>
+        if totalBytesWritten == 0 {
+            fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_READ_WRITE_NEW_FILE))
+        } else {
+            fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_READ_WRITE_EXISTING_FILE))
+        }
         switch fileOpenResult {
         case .failure:
             self.delegateError(SessionUploadTask.SessionUploadError.connectionFailed)
@@ -130,6 +139,9 @@ public class SessionUploadTask: SessionTask {
 
             let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
 
+            if operation.isCancelled {
+                break
+            }
             bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr+totalBytesWritten, bufferSize: uploadBufferLimit)
             // bytesWritten == -1, console output is 'netbios_session_packet_recv: : Network is down'
             if bytesWritten < 0 {
@@ -149,6 +161,10 @@ public class SessionUploadTask: SessionTask {
 
         self.session.fileClose(fileId: fileId)
 
+        if operation.isCancelled {
+            return
+        }
+
         // if there was an upload extension move the file to remove the extension
         if self.uploadExtension != nil, let destPath = self.file?.uploadPath {
             let moveError = self.session.fileMove(volume: self.path.volume, oldPath: uploadPath, newPath: destPath)
@@ -158,6 +174,31 @@ public class SessionUploadTask: SessionTask {
             }
         }
         self.didFinish()
+    }
+
+    override public func cancel() {
+        if self.state != .running {
+            return
+        }
+
+        let deleteFunc = {
+            if self.uploadExtension != nil, let destPath = self.file?.uploadPath {
+                _ = self.session.fileDelete(volume: self.path.volume, path: destPath)
+            }
+            if let uploadPath = self.fileUploadPath {
+                _ = self.session.fileDelete(volume: self.path.volume, path: uploadPath)
+            }
+        }
+        let deleteOperation = BlockOperation(block: deleteFunc)
+        if let op = self.taskOperation {
+            deleteOperation.addDependency(op)
+        }
+        self.session.taskQueue.addOperation(deleteOperation)
+
+        self.taskOperation?.cancel()
+        self.state = .cancelled
+
+        self.taskOperation = nil
     }
 
     private func delegateError(_ error: SessionUploadTask.SessionUploadError) {

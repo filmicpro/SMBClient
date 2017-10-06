@@ -307,9 +307,7 @@ public class SessionDownloadTask: SessionTask {
         let deleteFunc = {
             do {
                 try FileManager.default.removeItem(atPath: self.tempPathForTemoraryDestination)
-            } catch {
-                // TODO
-            }
+            } catch { }
         }
         let deleteOperation = BlockOperation(block: deleteFunc)
         if let op = self.taskOperation {

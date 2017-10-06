@@ -14,9 +14,7 @@ public class SessionTask {
     var session: SMBSession
     var delegateQueue: DispatchQueue
     var canBeResumed: Bool {
-        get {
             return false
-        }
     }
     var state: SessionTaskState = .ready
 
