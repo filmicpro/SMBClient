@@ -193,7 +193,6 @@ public class SessionDownloadTask: SessionTask {
                 } catch { }
                 return
             case .success(let readBytes):
-                // TODO: this should probably update bytesReceived
                 self.bytesReceived = UInt64(readBytes)
             }
         }
