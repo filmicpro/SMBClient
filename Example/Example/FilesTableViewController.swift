@@ -71,12 +71,12 @@ class FilesTableViewController: UIViewController {
 //                                  uploadExtension: ".upload",
 //                                  fromURL: fileURL,
 //                                  delegate: self)
-        switch t {
-        case .success(let task):
-            self.task = task
-        case .failure:
-            print("FilesTabelViewController: task failed to create")
-        }
+//        switch t {
+//        case .success(let task):
+//            self.task = task
+//        case .failure:
+//            print("FilesTabelViewController: task failed to create")
+//        }
     }
 
 }
