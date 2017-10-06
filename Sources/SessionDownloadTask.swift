@@ -13,19 +13,10 @@ import UIKit
 
 import libdsm
 
-public enum SessionDownloadError: Error {
-    case cancelled
-    case fileNotFound
-    case serverNotFound
-    case downloadFailed
-    case lostConnection
-    case invalidDestination
-}
-
 public protocol SessionDownloadTaskDelegate: class {
     func downloadTask(didFinishDownloadingToPath: String)
     func downloadTask(totalBytesReceived: UInt64, totalBytesExpected: UInt64)
-    func downloadTask(didCompleteWithError: SessionDownloadError)
+    func downloadTask(didCompleteWithError: SessionDownloadTask.SessionDownloadError)
 }
 
 public class SessionDownloadTask: SessionTask {
@@ -59,7 +50,7 @@ public class SessionDownloadTask: SessionTask {
         super.init(session: session)
     }
 
-    private func delegateError(_ error: SessionDownloadError) {
+    private func delegateError(_ error: SessionDownloadTask.SessionDownloadError) {
         self.delegateQueue.async {
             self.delegate?.downloadTask(didCompleteWithError: error)
         }
@@ -319,5 +310,16 @@ public class SessionDownloadTask: SessionTask {
         self.state = .cancelled
 
         self.taskOperation = nil
+    }
+}
+
+extension SessionDownloadTask {
+    public enum SessionDownloadError: Error {
+        case cancelled
+        case fileNotFound
+        case serverNotFound
+        case downloadFailed
+        case lostConnection
+        case invalidDestination
     }
 }

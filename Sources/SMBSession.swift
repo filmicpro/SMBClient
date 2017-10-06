@@ -23,10 +23,10 @@ public class SMBSession {
     }()
     private var lastRequestDate: Date?
 
-    public var sessionGuestState: SessionGuestState?
-    public var connected: Bool = false
-    public var server: SMBServer
-    public var credentials: Credentials
+    public private(set) var sessionGuestState: SessionGuestState?
+    public private(set) var connected: Bool = false
+    public let server: SMBServer
+    public let credentials: Credentials
 
     public var maxTaskOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
 

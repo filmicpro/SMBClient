@@ -11,12 +11,12 @@ import UIKit
 import libdsm
 
 public class SessionTask {
-    var session: SMBSession
-    var delegateQueue: DispatchQueue
+    let session: SMBSession
+    let delegateQueue: DispatchQueue
     var canBeResumed: Bool {
             return false
     }
-    var state: SessionTaskState = .ready
+    public internal(set) var state: SessionTaskState = .ready
 
     internal var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
 
@@ -40,12 +40,13 @@ public class SessionTask {
         return operation
     }()
 
+    // subclass overrides this
     func performTaskWith(operation: BlockOperation) {
         return
     }
 
     // used to validate that a remote file is where we expect, before operating on it
-    func request(file: SMBFile, inTree treeId: smb_tid) -> SMBFile? {
+    internal func request(file: SMBFile, inTree treeId: smb_tid) -> SMBFile? {
         let fileStat = self.session.fileStat(treeId: treeId, file: file)
         switch fileStat {
         case .failure:

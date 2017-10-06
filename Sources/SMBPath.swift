@@ -10,7 +10,7 @@ import Foundation
 
 public struct SMBPath {
     public let volume: SMBVolume
-    public var directories: [SMBDirectory]
+    public private(set) var directories: [SMBDirectory]
 
     public init(volume: SMBVolume) {
         self.volume = volume
@@ -45,4 +45,5 @@ public struct SMBPath {
             self.directories.append(directory)
         }
     }
+
 }

@@ -65,7 +65,7 @@ extension DownloadProgressViewController: SessionDownloadTaskDelegate {
     func downloadTask(totalBytesReceived: UInt64, totalBytesExpected: UInt64) {
         self.downloadProgressView.progress = Float(totalBytesReceived) / Float(totalBytesExpected)
     }
-    func downloadTask(didCompleteWithError: SessionDownloadError) {
+    func downloadTask(didCompleteWithError: SessionDownloadTask.SessionDownloadError) {
         print("error: \(didCompleteWithError)")
         let alert = UIAlertController(title: "error", message: didCompleteWithError.localizedDescription, preferredStyle: .alert)
         let ok = UIAlertAction(title: "OK", style: .default, handler: nil)

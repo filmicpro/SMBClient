@@ -13,13 +13,13 @@ public struct SMBFile {
 
     public var name: String
 
-    public var fileSize: UInt64
-    public var allocationSize: UInt64
+    public private(set) var fileSize: UInt64
+    public private(set) var allocationSize: UInt64
 
-    public var createdAt: Date?
-    public var accessedAt: Date?
-    public var writeAt: Date?
-    public var modifiedAt: Date?
+    public private(set) var createdAt: Date?
+    public private(set) var accessedAt: Date?
+    public private(set) var writeAt: Date?
+    public private(set) var modifiedAt: Date?
 
     init?(stat: OpaquePointer, parentPath: SMBPath) {
         self.path = parentPath
