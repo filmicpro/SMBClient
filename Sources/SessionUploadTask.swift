@@ -39,14 +39,9 @@ public class SessionUploadTask: SessionTask {
         super.init(session: session, delegateQueue: delegateQueue)
     }
 
-    func delegateError(_ error: SessionUploadTask.SessionUploadError) {
-        self.delegateQueue.async {
-            self.delegate?.uploadTask(didCompleteWithError: error)
-        }
-    }
-
     override func performTaskWith(operation: BlockOperation) {
         if operation.isCancelled {
+            delegateError(.cancelled)
             return
         }
 
@@ -72,23 +67,33 @@ public class SessionUploadTask: SessionTask {
 
         if operation.isCancelled {
             self.cleanupBlock(treeId: treeId, fileId: fileId)
+            delegateError(.cancelled)
             return
         }
 
-        let SMB_MOD_RW = SMB_MOD_READ |
-            SMB_MOD_WRITE |
-            SMB_MOD_APPEND |
-            SMB_MOD_READ_EXT |
-            SMB_MOD_WRITE_EXT |
-            SMB_MOD_READ_ATTR |
-            SMB_MOD_WRITE_ATTR |
-            SMB_MOD_READ_CTL
+        let SMB_MOD_READ_WRITE = SMB_MOD_READ | SMB_MOD_WRITE | SMB_MOD_APPEND
+            | SMB_MOD_READ_ATTR | SMB_MOD_WRITE_ATTR
+            | SMB_MOD_READ_CTL
+
         // ### open the file handle
         guard let uploadPath = self.fileUploadPath else {
             self.delegateError(SessionUploadTask.SessionUploadError.fileNotFound)
             return
         }
-        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_RW))
+
+        var bytes = [UInt8](self.data)
+        let totalByteCount = bytes.count
+
+        var uploadBufferLimit = min(bytes.count, 63488)
+        var bytesWritten = 0
+        var totalBytesWritten = 0
+
+        // check if there is a file to resume upload on
+        if let previousUpload = self.existingTempDestination(treeId: treeId) {
+            totalBytesWritten = Int(previousUpload.fileSize)
+        }
+
+        let fileOpenResult = self.session.fileOpen(treeId: treeId, path: uploadPath, mod: UInt32(SMB_MOD_READ_WRITE))
         switch fileOpenResult {
         case .failure:
             self.delegateError(SessionUploadTask.SessionUploadError.connectionFailed)
@@ -104,12 +109,19 @@ public class SessionUploadTask: SessionTask {
             return
         }
 
-        var bytes = [UInt8](self.data)
-        let totalByteCount = bytes.count
-
-        var uploadBufferLimit = min(bytes.count, 63488)
-        var bytesWritten = 0
-        var totalBytesWritten = 0
+        // if resuming a previously failed upload
+        if totalBytesWritten > 0 {
+            let res = self.session.fileSeek(fileId: fileId, offset: UInt64(totalBytesWritten))
+            switch res {
+            case .success(let readPointer):
+                if readPointer != totalBytesWritten {
+                    // something has gone wrong, remove remote file and try again
+                }
+            case .failure:
+                // remove file, try again
+                break
+            }
+        }
 
         repeat {
             if totalByteCount - totalBytesWritten < uploadBufferLimit {
@@ -148,6 +160,28 @@ public class SessionUploadTask: SessionTask {
         self.didFinish()
     }
 
+    private func delegateError(_ error: SessionUploadTask.SessionUploadError) {
+        self.delegateQueue.async {
+            self.delegate?.uploadTask(didCompleteWithError: error)
+        }
+    }
+
+    private func existingTempDestination(treeId: smb_tid) -> SMBFile? {
+        guard let ue = self.uploadExtension else { return nil }
+        guard let filePath = self.file?.path else { return nil }
+        guard let tempName = self.file?.name.appending(ue) else { return nil }
+        if let tempFile = SMBFile(path: filePath, name: tempName) {
+            let existingUpload = self.session.fileStat(treeId: treeId, file: tempFile)
+            switch existingUpload {
+            case .success(let f):
+                return f
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
     private var fileUploadPath: String? {
         guard let f = self.file else { return nil }
         if let ue = self.uploadExtension {
@@ -157,7 +191,7 @@ public class SessionUploadTask: SessionTask {
         }
     }
 
-    func didFinish() {
+    private func didFinish() {
         self.state = .completed
         self.delegateQueue.async {
             self.delegate?.uploadTask(didFinishUploading: self)
