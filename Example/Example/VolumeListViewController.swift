@@ -37,7 +37,7 @@ class VolumeListViewController: UIViewController {
                 case .success(let volumes):
                     self.volumes = volumes
                 case .failure(let error):
-                    let alert = UIAlertController(title: "error", message: error.description, preferredStyle: .alert)
+                    let alert = UIAlertController(title: "error", message: error.debugDescription, preferredStyle: .alert)
                     let ok = UIAlertAction(title: "OK", style: .default, handler: { (_) in
                         self.navigationController?.popViewController(animated: true)
                     })

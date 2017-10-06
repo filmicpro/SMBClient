@@ -6,6 +6,7 @@
 //  Copyright © 2017 Filmic. All rights reserved.
 //
 
+import SystemConfiguration
 import libdsm
 
 public class SMBSession {
@@ -42,6 +43,27 @@ public class SMBSession {
     public init(server: SMBServer, credentials: SMBSession.Credentials = .guest) {
         self.server = server
         self.credentials = credentials
+    }
+
+    public var deviceIsOnWiFi: Bool {
+        guard let reachability = SCNetworkReachabilityCreateWithName(nil, "8.8.8.8") else { return false }
+        var flags = SCNetworkReachabilityFlags()
+        let getFlags = SCNetworkReachabilityGetFlags(reachability, &flags)
+        if !getFlags {
+            return false
+        }
+
+        let isReachable = flags.contains(.reachable)
+        let needsConnection = flags.contains(.connectionRequired)
+        let isNetworkReachable = (isReachable && !needsConnection)
+
+        if !isNetworkReachable {
+            return false
+        } else if flags.contains(.isWWAN) {
+            return false
+        }
+
+        return true
     }
 
     public func requestVolumes() -> Result<[SMBVolume], SMBSessionError> {
@@ -192,6 +214,9 @@ public class SMBSession {
     }
 
     private func attemptConnectionWithSessionPointer(smbSession: OpaquePointer?) -> SMBSessionError? {
+        if !self.deviceIsOnWiFi {
+            return SMBSessionError.notOnWiFi
+        }
 
         // if we're connecting from a dowload task, and the sessions match, make sure to refresh them periodically
         if self.rawSession == smbSession {
@@ -294,8 +319,8 @@ public class SMBSession {
         var treeId = smb_tid(0)
         // ### confirm server is still available
         let smbSessionError = self.attemptConnection()
-        if smbSessionError != nil {
-            return Result.failure(SMBSessionError.unableToConnect)
+        if let err = smbSessionError {
+            return Result.failure(err)
         }
 
         let x = smb_tree_connect(self.rawSession, volume.name.cString(using: .utf8), &treeId)
@@ -433,6 +458,7 @@ extension SMBSession {
     }
 
     public enum SMBSessionError: Error {
+        case notOnWiFi
         case unableToResolveAddress
         case unableToConnect
         case authenticationFailed
@@ -471,8 +497,8 @@ extension SMBSession {
     }
 }
 
-extension SMBSession.Credentials: CustomStringConvertible {
-    public var description: String {
+extension SMBSession.Credentials: CustomDebugStringConvertible {
+    public var debugDescription: String {
         switch self {
         case .guest:
             return "guest"
@@ -490,9 +516,11 @@ extension SMBSession: CustomDebugStringConvertible {
     }
 }
 
-extension SMBSession.SMBSessionError: CustomStringConvertible {
-    public var description: String {
+extension SMBSession.SMBSessionError: CustomDebugStringConvertible {
+    public var debugDescription: String {
         switch self {
+        case .notOnWiFi:
+            return "Not on wifi"
         case .authenticationFailed:
             return "Authentication failed"
         case .disconnectFailed:
