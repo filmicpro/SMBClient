@@ -63,8 +63,6 @@
 		C36F2BAD1F5793B5008B96C4 /* SMBClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMBClientTests.swift; sourceTree = "<group>"; };
 		C36F2BAF1F5793B5008B96C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBIOSNameService.swift; sourceTree = "<group>"; };
-		C36F2BE31F58830F008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdsm.a; path = External/libdsm/libdsm.a; sourceTree = "<group>"; };
-		C36F2BE41F58830F008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = External/libdsm/libtasn1.a; sourceTree = "<group>"; };
 		C36F2BE71F58839C008B96C4 /* libtasn1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtasn1.a; path = libdsm/libtasn1.a; sourceTree = "<group>"; };
 		C36F2BE81F58839C008B96C4 /* libdsm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdsm.a; path = libdsm/libdsm.a; sourceTree = "<group>"; };
 		C3929C4C1F5F2F6A0014B804 /* SessionDownloadTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDownloadTask.swift; sourceTree = "<group>"; };
@@ -167,10 +165,8 @@
 			isa = PBXGroup;
 			children = (
 				C33449511F59E67900A0EB61 /* libiconv.tbd */,
-				C36F2BE31F58830F008B96C4 /* libdsm.a */,
 				C36F2BE81F58839C008B96C4 /* libdsm.a */,
 				C36F2BE71F58839C008B96C4 /* libtasn1.a */,
-				C36F2BE41F58830F008B96C4 /* libtasn1.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -475,7 +471,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libdsm",
-					"$(PROJECT_DIR)/External/libdsm",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClient;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -506,7 +501,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libdsm",
-					"$(PROJECT_DIR)/External/libdsm",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmicpro.SMBClient;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

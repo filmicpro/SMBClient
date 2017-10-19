@@ -19,3 +19,8 @@ DerivedData
 *.xcscmblueprint
 *.idea*
 
+# libdsm build
+build/
+
+# macOS
+.DS_Store

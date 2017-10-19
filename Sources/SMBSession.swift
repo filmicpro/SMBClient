@@ -10,11 +10,7 @@ import SystemConfiguration
 import libdsm
 
 public class SMBSession {
-    private var rawSession = smb_session_new() {
-        didSet {
-            print("rawSession updated: \(String(describing: rawSession))")
-        }
-    }
+    private var rawSession = smb_session_new()
     internal var serialQueue = DispatchQueue(label: "SMBSession")
 
     lazy var dataQueue: OperationQueue = {
@@ -208,7 +204,6 @@ public class SMBSession {
         }
 
         self.sessionGuestState = SessionGuestState(rawValue: smb_session_is_guest(self.rawSession))
-        print("sessionGuestState: \(String(describing: self.sessionGuestState))")
 
         return nil
     }
