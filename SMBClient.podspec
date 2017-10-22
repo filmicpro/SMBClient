@@ -12,11 +12,11 @@ for SMB shares and allows authenticated or guest access.
   s.platform     = :ios, '8.0'
 
   s.source       = { :git => 'https://github.com/filmicpro/SMBClient.git', :tag => s.version }
-  
-  s.source_files = 'Sources/**/*.swift', 'libdsm/include/**/*.h'
-  s.public_header_files = 'Sources/Support Files/SMBClient.h'
-  s.pod_target_xcconfig = { 'SWIFT_INCLUDE_PATHS' => '$(SRCROOT)/SMBClient/libdsm/include/**', 'LIBRARY_SEARCH_PATHS' => '$(SRCROOT)/SMBClient/Sources/'}
-  s.preserve_paths = 'libdsm/module.modulemap'
+
+  s.source_files = 'Sources/**/*.{swift,h}' #, 'libdsm/include/**/*.h'
+  s.public_header_files = 'Sources/SMBClient.h'
+  s.pod_target_xcconfig = { 'SWIFT_INCLUDE_PATHS' => '$(SRCROOT)/SMBClient/libdsm/**', 'LIBRARY_SEARCH_PATHS' => '$(SRCROOT)/SMBClient/libdsm/**'}
+  s.preserve_paths = 'libdsm'
   s.vendored_libraries = 'libdsm/libdsm.a', 'libdsm/libtasn1.a'
   s.library      = 'iconv'
 end

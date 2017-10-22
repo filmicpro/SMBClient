@@ -236,7 +236,7 @@ public class SMBSession {
         let connectionResult = smb_session_connect(self.rawSession,
                                                    server.hostname.cString(using: .utf8),
                                                    server.ipAddress,
-                                                   Int32(SMB_TRANSPORT_TCP))
+                                                   Int32(libdsm.SMB_TRANSPORT_TCP))
         // connectionResult == -3 on timeout
         if connectionResult != 0 {
             return SMBSessionError.unableToConnect
@@ -414,7 +414,7 @@ public class SMBSession {
 
     // @return The current read pointer position or -1 on error
     internal func fileSeek(fileId: smb_fd, offset: UInt64) -> Result<Int, SMBSessionError> {
-        let result = smb_fseek(self.rawSession, fileId, Int64(offset), Int32(SMB_SEEK_SET))
+        let result = smb_fseek(self.rawSession, fileId, Int64(offset), Int32(libdsm.SMB_SEEK_SET))
         if result < 0 {
             return Result.failure(SMBSessionError.unableToConnect)
         } else {

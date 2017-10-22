@@ -122,6 +122,7 @@
 		C36F2BA11F5793B5008B96C4 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C36F2BA21F5793B5008B96C4 /* SMBClient.h */,
 				C36F2BCF1F579683008B96C4 /* Support Files */,
 				C36F2BCB1F579566008B96C4 /* NetBIOSNameService.swift */,
 				C334494D1F58AA4800A0EB61 /* NetBIOSNameServiceEntry.swift */,
@@ -159,7 +160,6 @@
 			isa = PBXGroup;
 			children = (
 				C36F2BA31F5793B5008B96C4 /* Info.plist */,
-				C36F2BA21F5793B5008B96C4 /* SMBClient.h */,
 			);
 			path = "Support Files";
 			sourceTree = "<group>";
