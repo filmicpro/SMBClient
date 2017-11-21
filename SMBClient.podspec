@@ -24,8 +24,8 @@ Pod::Spec.new do |s|
   #   'SWIFT_INCLUDE_PATHS' => '/Users/sfaxon/src/SMBClient/libdsm'
   # }
   s.xcconfig = {
-    'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/SMBClient/libdsm/include/bdsm',
-    'SWIFT_INCLUDE_PATHS' => '$(PODS_ROOT)/SMBClient/libdsm'
+    'HEADER_SEARCH_PATHS' => '$(PODS_TARGET_SRCROOT)/libdsm/include/bdsm',
+    'SWIFT_INCLUDE_PATHS' => '$(PODS_TARGET_SRCROOT)/libdsm'
   }
   s.preserve_paths = 'libdsm/*'
   s.vendored_libraries = 'libdsm/libdsm.a', 'libdsm/libtasn1.a'

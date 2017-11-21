@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  SMBClient: 2f995daf1f6edae81ef86bbbf806659afc3bd7ca
+  SMBClient: 1b4d652f57a1d3dfaf4dacbb1b3d0ab49d1a8633
 
 PODFILE CHECKSUM: 1231e86be15be64c5fc4e3f994cd1b79975970de
 

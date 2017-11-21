@@ -23,8 +23,8 @@
     "libdsm/**/*.modulemap"
   ],
   "xcconfig": {
-    "HEADER_SEARCH_PATHS": "$(PODS_ROOT)/SMBClient/libdsm/include/bdsm",
-    "SWIFT_INCLUDE_PATHS": "$(PODS_ROOT)/SMBClient/libdsm"
+    "HEADER_SEARCH_PATHS": "$(PODS_TARGET_SRCROOT)/libdsm/include/bdsm",
+    "SWIFT_INCLUDE_PATHS": "$(PODS_TARGET_SRCROOT)/libdsm"
   },
   "preserve_paths": "libdsm/*",
   "vendored_libraries": [
