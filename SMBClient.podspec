@@ -1,22 +1,34 @@
+#
+# Be sure to run `pod lib lint SMBClient.podspec' to ensure this is a
+# valid spec before submitting.
+#
+# Any lines starting with a # are optional, but their use is encouraged
+# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
+#
+
 Pod::Spec.new do |s|
-  s.name         = 'SMBClient'
-  s.version      = '0.1.0'
-  s.summary      = 'Swift wrapper for libdsm for connecting to SMB shares.'
-  s.description  = <<-DESC
-SMBCLient is a Swift wrapper for libdsm. It allows browsing the local network
-for SMB shares and allows authenticated or guest access.
-                   DESC
-  s.homepage     = 'https://github.com/filmicpro/SMBClient'
-  s.license      = 'MIT'
-  s.author       = { 'Seth Faxon' => 'seth.faxon@gmail.com' }
-  s.platform     = :ios, '8.0'
+  s.name             = 'SMBClient'
+  s.version          = '0.0.1'
+  s.summary          = 'SMBClient is simple SMB client for iOS apps. It allows connecting to SMB devices.'
 
-  s.source       = { :git => 'https://github.com/filmicpro/SMBClient.git', :tag => s.version }
+  s.homepage         = "https://github.com/filmicpro/SMBClient"
+  s.license          = { :type => 'MIT', :file => 'LICENSE' }
+  s.author           = { 'Seth Faxon' => 'seth@filmicpro.com' }
+  s.source           = { :git => "https://github.com/filmicpro/SMBClient.git", :tag => "#{s.version}" }
 
-  s.source_files = 'Sources/**/*.{swift,h}' #, 'libdsm/include/**/*.h'
-  s.public_header_files = 'Sources/SMBClient.h'
-  s.pod_target_xcconfig = { 'SWIFT_INCLUDE_PATHS' => '$(SRCROOT)/SMBClient/libdsm/**', 'LIBRARY_SEARCH_PATHS' => '$(SRCROOT)/SMBClient/libdsm/**'}
-  s.preserve_paths = 'libdsm'
+  s.ios.deployment_target = '10.0'
+
+  s.source_files  = ["Sources/**/*.swift", "libdsm/**/*.h", "libdsm/**/*.modulemap"]
+  # s.xcconfig = {
+  #   'HEADER_SEARCH_PATHS' => '/Users/sfaxon/src/SMBClient/libdsm/include/bdsm',
+  #   'SWIFT_INCLUDE_PATHS' => '/Users/sfaxon/src/SMBClient/libdsm'
+  # }
+  s.xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/SMBClient/libdsm/include/bdsm',
+    'SWIFT_INCLUDE_PATHS' => '$(PODS_ROOT)/SMBClient/libdsm'
+  }
+  s.preserve_paths = 'libdsm/*'
   s.vendored_libraries = 'libdsm/libdsm.a', 'libdsm/libtasn1.a'
-  s.library      = 'iconv'
+  s.library = 'iconv'
+
 end

@@ -1,0 +1,10 @@
+platform :ios, '11.0'
+
+source 'git@bitbucket.org:filmic2015/privatepods.git'
+source 'https://github.com/CocoaPods/Specs.git'
+
+use_frameworks!
+
+target "Example" do
+  pod 'SMBClient', path: '../'
+end
