@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SMBClient'
-  s.version          = '0.0.1'
+  s.version          = '0.0.2'
   s.summary          = 'SMBClient is simple SMB client for iOS apps. It allows connecting to SMB devices.'
 
   s.homepage         = "https://github.com/filmicpro/SMBClient"
