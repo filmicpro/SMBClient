@@ -47,3 +47,9 @@ public struct SMBPath {
     }
 
 }
+
+extension SMBPath: Equatable {}
+
+public func == (lhs: SMBPath, rhs: SMBPath) -> Bool {
+    return lhs.volume == rhs.volume && lhs.routablePath == rhs.routablePath
+}

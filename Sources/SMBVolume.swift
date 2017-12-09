@@ -26,3 +26,9 @@ public struct SMBVolume {
         return self.name.last == "$"
     }
 }
+
+extension SMBVolume: Equatable { }
+
+public func == (lhs: SMBVolume, rhs: SMBVolume) -> Bool {
+    return lhs.server == rhs.server && lhs.name == rhs.name
+}

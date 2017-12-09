@@ -241,6 +241,12 @@ public class SessionUploadTask: SessionTask {
 
 }
 
+extension SessionUploadTask: Equatable { }
+
+public func == (lhs: SessionUploadTask, rhs: SessionUploadTask) -> Bool {
+    return lhs.path == rhs.path
+}
+
 extension SessionUploadTask {
     public enum SessionUploadError: Error {
         case cancelled
