@@ -21,6 +21,10 @@ public struct SMBDirectory {
         self.name = String(cString: cName)
     }
 
+    internal init(name: String) {
+        self.name = name
+    }
+
     public var isHidden: Bool {
         return self.name.last == "$" || self.name.first == "."
     }

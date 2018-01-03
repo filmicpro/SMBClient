@@ -17,6 +17,46 @@ public struct SMBPath {
         self.directories = []
     }
 
+    // expects a URL like: smb://host/volume/somePath
+    // this will fail to init if the server is not currently available
+    public init?(fromURL url: URL) {
+        guard let host = url.host else {
+            return nil
+        }
+        guard let server = SMBServer(hostname: host) else {
+            return nil
+        }
+        // url.pathComponents gives us a leading slash,
+        // from above example this is:
+        // ["/", "volume", "somePath"]
+        var pathComponents = url.pathComponents
+        // can't have a valid connection without a host and a volume
+        guard pathComponents.count > 2 else {
+            return nil
+        }
+
+        // pop off the leading '/' that pathComponents gives us
+        var popedComponent = "/"
+        while popedComponent != "/" {
+            popedComponent = pathComponents.removeFirst()
+        }
+        let volumeName = pathComponents.removeFirst()
+        self.volume = SMBVolume(server: server, name: volumeName)
+
+        // build directories from whatever is left
+        var pathDirectories = [SMBDirectory]()
+        while pathComponents.count > 0 {
+            let dir = SMBDirectory(name: pathComponents.removeFirst())
+            pathDirectories.append(dir)
+        }
+        self.directories = pathDirectories
+    }
+
+    public var asURL: URL {
+        let pathString = self.directories.map { $0.name }.joined(separator: "/")
+        return URL(string: "smb://\(self.volume.server.hostname)/\(pathString)")!
+    }
+
     public var routablePath: String {
         let slash = "\\"
         if self.directories.count == 0 {
