@@ -60,7 +60,8 @@ public class SessionDownloadTask: SessionTask {
         guard let dest = self.destinationFileURL else { return nil }
 
         var fileName = dest.lastPathComponent
-        let isFile = fileName.contains(".") && fileName.characters.first != "."
+        let fName = fileName.utf8
+        let isFile = fileName.contains(".") && fName.first != Unicode.UTF8.CodeUnit(".")
 
         let folderPath: URL
         if isFile {
