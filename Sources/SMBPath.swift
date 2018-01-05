@@ -31,16 +31,16 @@ public struct SMBPath {
         // ["/", "volume", "somePath"]
         var pathComponents = url.pathComponents
         // can't have a valid connection without a host and a volume
-        guard pathComponents.count > 2 else {
+        guard pathComponents.count >= 2 else {
             return nil
         }
 
         // pop off the leading '/' that pathComponents gives us
         var popedComponent = "/"
-        while popedComponent != "/" {
+        while popedComponent == "/" && pathComponents.count > 0 {
             popedComponent = pathComponents.removeFirst()
         }
-        let volumeName = pathComponents.removeFirst()
+        let volumeName = popedComponent
         self.volume = SMBVolume(server: server, name: volumeName)
 
         // build directories from whatever is left
@@ -53,14 +53,15 @@ public struct SMBPath {
     }
 
     public var asURL: URL {
-        var pathString = self.directories.map { $0.name }.joined(separator: "/")
+        var pathString = "/\(self.volume.name)/"
+        pathString += self.directories.map { $0.name }.joined(separator: "/")
         if let stringEscaped = pathString.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
             pathString = stringEscaped
         }
         var components = URLComponents(string: "")!
         components.scheme = "smb"
         components.host = self.volume.server.hostname
-        components.path = "/\(pathString)"
+        components.path = pathString
 
         return components.url!
     }
