@@ -17,8 +17,8 @@ public struct SMBPath {
         self.directories = []
     }
 
-    // expects a URL like: smb://host/volume/somePath
-    // this will fail to init if the server is not currently available
+    /// expects a URL like: smb://host/volume/somePath
+    /// this will fail to init if the server is not currently available
     public init?(fromURL url: URL) {
         guard let host = url.host else {
             return nil
@@ -53,8 +53,16 @@ public struct SMBPath {
     }
 
     public var asURL: URL {
-        let pathString = self.directories.map { $0.name }.joined(separator: "/")
-        return URL(string: "smb://\(self.volume.server.hostname)/\(pathString)")!
+        var pathString = self.directories.map { $0.name }.joined(separator: "/")
+        if let stringEscaped = pathString.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
+            pathString = stringEscaped
+        }
+        var components = URLComponents(string: "")!
+        components.scheme = "smb"
+        components.host = self.volume.server.hostname
+        components.path = "/\(pathString)"
+
+        return components.url!
     }
 
     public var routablePath: String {

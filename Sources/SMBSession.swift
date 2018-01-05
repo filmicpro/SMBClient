@@ -52,7 +52,7 @@ public class SMBSession {
         }
         return false
     }
-    
+
     private func checkReachabilityFor(ipAddress: String) -> Bool {
         guard let reachability = SCNetworkReachabilityCreateWithName(nil, ipAddress) else { return false }
         var flags = SCNetworkReachabilityFlags()
@@ -60,17 +60,17 @@ public class SMBSession {
         if !getFlags {
             return false
         }
-        
+
         let isReachable = flags.contains(.reachable)
         let needsConnection = flags.contains(.connectionRequired)
         let isNetworkReachable = (isReachable && !needsConnection)
-        
+
         if !isNetworkReachable {
             return false
         } else if flags.contains(.isWWAN) {
             return false
         }
-        
+
         return true
     }
 
