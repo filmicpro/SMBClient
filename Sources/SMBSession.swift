@@ -24,6 +24,8 @@ public class SMBSession {
     public private(set) var connected: Bool = false
     public let server: SMBServer
     public let credentials: Credentials
+    /// Array of strings, IP addresses to use when checking reachability
+    public var wifiReachabilityVerificationIPs: [String] = ["8.8.8.8"]
 
     public var maxTaskOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
 
@@ -42,23 +44,33 @@ public class SMBSession {
     }
 
     public var deviceIsOnWiFi: Bool {
-        guard let reachability = SCNetworkReachabilityCreateWithName(nil, "8.8.8.8") else { return false }
+        for address in self.wifiReachabilityVerificationIPs {
+            let result = checkReachabilityFor(ipAddress: address)
+            if result {
+                return true
+            }
+        }
+        return false
+    }
+    
+    private func checkReachabilityFor(ipAddress: String) -> Bool {
+        guard let reachability = SCNetworkReachabilityCreateWithName(nil, ipAddress) else { return false }
         var flags = SCNetworkReachabilityFlags()
         let getFlags = SCNetworkReachabilityGetFlags(reachability, &flags)
         if !getFlags {
             return false
         }
-
+        
         let isReachable = flags.contains(.reachable)
         let needsConnection = flags.contains(.connectionRequired)
         let isNetworkReachable = (isReachable && !needsConnection)
-
+        
         if !isNetworkReachable {
             return false
         } else if flags.contains(.isWWAN) {
             return false
         }
-
+        
         return true
     }
 
