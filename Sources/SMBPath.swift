@@ -46,7 +46,11 @@ public struct SMBPath {
         // build directories from whatever is left
         var pathDirectories = [SMBDirectory]()
         while pathComponents.count > 0 {
-            let dir = SMBDirectory(name: pathComponents.removeFirst())
+            var pathName = pathComponents.removeFirst()
+            if let p = pathName.removingPercentEncoding {
+                pathName = p
+            }
+            let dir = SMBDirectory(name: pathName)
             pathDirectories.append(dir)
         }
         self.directories = pathDirectories
@@ -55,13 +59,10 @@ public struct SMBPath {
     public var asURL: URL {
         var pathString = "/\(self.volume.name)/"
         pathString += self.directories.map { $0.name }.joined(separator: "/")
-        if let stringEscaped = pathString.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
-            pathString = stringEscaped
-        }
         var components = URLComponents(string: "")!
         components.scheme = "smb"
         components.host = self.volume.server.hostname
-        components.path = pathString
+        components.path = pathString // does URL percent encoding
 
         return components.url!
     }
