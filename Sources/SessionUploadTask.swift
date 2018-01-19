@@ -133,7 +133,11 @@ public class SessionUploadTask: SessionTask {
         // if resuming a previously failed upload
         if totalBytesWritten > 0 {
             // just in case the upload didn't get all the bits on disk, we'll jump back one chunkSize
-            totalBytesWritten = max(0, (totalBytesWritten - UInt64(chunkSize)))
+            if totalBytesWritten > chunkSize {
+                totalBytesWritten = totalBytesWritten - UInt64(chunkSize)
+            } else {
+                totalBytesWritten = 0
+            }
 
             let res = self.session.fileSeek(fileId: fileId, offset: totalBytesWritten)
             switch res {
