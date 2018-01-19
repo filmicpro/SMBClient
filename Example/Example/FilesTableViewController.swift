@@ -58,11 +58,16 @@ class FilesTableViewController: UIViewController {
         let fileName = "\(UUID().uuidString).txt"
 
         let uploadPath = "\(path)/\(UUID().uuidString).txt"
+        
+        guard let fileURL = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName) else { return }
+        guard let f = FileHandle.init(forWritingAtPath: fileURL.path) else { return }
         guard let data = uploadPath.data(using: .utf8) else { return }
-
-        session.uploadTaskForData(toPath: path,
+        f.write(data)
+        f.closeFile()
+        
+        session.uploadTaskForFile(toPath: path,
                                   withName: fileName,
-                                  data: data,
+                                  fromURL: fileURL,
                                   delegate: self)
 
 //        let fileURL = URL(fileURLWithPath: "absolutePathOfLargeFile")
