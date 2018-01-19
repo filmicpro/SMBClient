@@ -101,7 +101,7 @@ public class SessionUploadTask: SessionTask {
         fileHandle.seek(toFileOffset: 0)
 
         var uploadBufferLimit: UInt64 = min(totalByteCount, UInt64(chunkSize))
-        
+
         var totalBytesWritten: UInt64 = 0
 
         // check if there is a file to resume upload on
@@ -154,7 +154,7 @@ public class SessionUploadTask: SessionTask {
             }
         }
 
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
+        let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
 
         fileHandle.seek(toFileOffset: totalBytesWritten)
         repeat {
@@ -167,12 +167,12 @@ public class SessionUploadTask: SessionTask {
 
             autoreleasepool {
                 let dataBytes = fileHandle.readData(ofLength: lengthToRead)
-                buffer.initialize(from: dataBytes)
+
+                let buffer = UnsafeMutableBufferPointer(start: pointer, count: dataBytes.count)
+                _ = buffer.initialize(from: dataBytes)
+
             }
-
-            let bytesWritten = self.session.fileWrite(fileId: fileId, buffer: buffer, bufferSize: lengthToRead)
-
-            buffer.deinitialize(count: lengthToRead)
+            let bytesWritten = self.session.fileWrite(fileId: fileId, buffer: pointer, bufferSize: lengthToRead)
 
             if operation.isCancelled {
                 fileHandle.closeFile()
@@ -191,8 +191,8 @@ public class SessionUploadTask: SessionTask {
             totalBytesWritten += UInt64(bytesWritten)
         } while (totalBytesWritten < totalByteCount)
 
-        buffer.deinitialize(count: chunkSize)
-        buffer.deallocate(capacity: chunkSize)
+        pointer.deinitialize(count: chunkSize)
+        pointer.deallocate(capacity: chunkSize)
 
         self.session.fileClose(fileId: fileId)
         fileHandle.closeFile()
