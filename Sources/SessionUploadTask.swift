@@ -41,7 +41,7 @@ public class SessionUploadTask: SessionTask {
 
     override func performTaskWith(operation: BlockOperation) {
         let chunkSize = 63488
-        
+
         let fileHandle: FileHandle
         do {
             fileHandle = try FileHandle(forReadingFrom: self.fromURL)
@@ -49,7 +49,7 @@ public class SessionUploadTask: SessionTask {
             delegateError(.fileNotFound)
             return
         }
-        
+
         if operation.isCancelled {
             delegateError(.cancelled)
             return
@@ -132,20 +132,27 @@ public class SessionUploadTask: SessionTask {
 
         // if resuming a previously failed upload
         if totalBytesWritten > 0 {
-            let res = self.session.fileSeek(fileId: fileId, offset: UInt64(totalBytesWritten))
+            // just in case the upload didn't get all the bits on disk, we'll jump back one chunkSize
+            totalBytesWritten = max(0, (totalBytesWritten - UInt64(chunkSize)))
+
+            let res = self.session.fileSeek(fileId: fileId, offset: totalBytesWritten)
             switch res {
             case .success(let readPointer):
                 if readPointer != totalBytesWritten {
                     // something has gone wrong, remove remote file and try again
+                    totalBytesWritten = 0
                 }
             case .failure:
                 // remove file, try again
+                totalBytesWritten = 0
+                self.session.fileSeek(fileId: fileId, offset: totalBytesWritten)
                 break
             }
         }
 
         var buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
 
+        fileHandle.seek(toFileOffset: totalBytesWritten)
         repeat {
             var remainingBytes = totalByteCount - totalBytesWritten
             if remainingBytes < uploadBufferLimit {
