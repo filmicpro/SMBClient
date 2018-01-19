@@ -101,7 +101,7 @@ public class SessionUploadTask: SessionTask {
         fileHandle.seek(toFileOffset: 0)
 
         var uploadBufferLimit: UInt64 = min(totalByteCount, UInt64(chunkSize))
-        var bytesWritten: UInt64 = 0
+        
         var totalBytesWritten: UInt64 = 0
 
         // check if there is a file to resume upload on
@@ -149,28 +149,28 @@ public class SessionUploadTask: SessionTask {
             case .failure:
                 // remove file, try again
                 totalBytesWritten = 0
-                self.session.fileSeek(fileId: fileId, offset: totalBytesWritten)
+                _ = self.session.fileSeek(fileId: fileId, offset: totalBytesWritten)
                 break
             }
         }
 
-        var buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
 
         fileHandle.seek(toFileOffset: totalBytesWritten)
         repeat {
-            var remainingBytes = totalByteCount - totalBytesWritten
+            let remainingBytes = totalByteCount - totalBytesWritten
             if remainingBytes < uploadBufferLimit {
                 uploadBufferLimit = remainingBytes
             }
 
-            var lengthToRead: Int = min(Int(uploadBufferLimit), chunkSize)
+            let lengthToRead: Int = min(Int(uploadBufferLimit), chunkSize)
 
             autoreleasepool {
                 let dataBytes = fileHandle.readData(ofLength: lengthToRead)
                 buffer.initialize(from: dataBytes)
             }
 
-            bytesWritten = UInt64(self.session.fileWrite(fileId: fileId, buffer: buffer, bufferSize: lengthToRead))
+            let bytesWritten = self.session.fileWrite(fileId: fileId, buffer: buffer, bufferSize: lengthToRead)
 
             buffer.deinitialize(count: lengthToRead)
 
@@ -188,7 +188,7 @@ public class SessionUploadTask: SessionTask {
                 self.delegate?.uploadTask(self, totalBytesSent: totalBytesWritten, totalBytesExpected: totalByteCount)
             }
 
-            totalBytesWritten += bytesWritten
+            totalBytesWritten += UInt64(bytesWritten)
         } while (totalBytesWritten < totalByteCount)
 
         buffer.deinitialize(count: chunkSize)
