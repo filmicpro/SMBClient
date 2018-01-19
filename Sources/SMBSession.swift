@@ -279,31 +279,28 @@ public class SMBSession {
     }
 
     // uploadTaskForFile(toPath: path, withName: fileName, data: data, delegate: self)
-    @discardableResult public func uploadTaskForData(toPath path: SMBPath,
-                                                     withName fileName: String,
-                                                     uploadExtension: String? = nil,
-                                                     data: Data,
-                                                     delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
-        let task = SessionUploadTask(session: self,
-                                     path: path,
-                                     fileName: fileName,
-                                     uploadExtension: uploadExtension,
-                                     data: data,
-                                     delegate: delegate)
-        self.uploadTasks.append(task)
-        task.resume()
-        return task
-    }
+//    @discardableResult public func uploadTaskForData(toPath path: SMBPath,
+//                                                     withName fileName: String,
+//                                                     uploadExtension: String? = nil,
+//                                                     data: Data,
+//                                                     delegate: SessionUploadTaskDelegate?) -> SessionUploadTask {
+//        let task = SessionUploadTask(session: self,
+//                                     path: path,
+//                                     fileName: fileName,
+//                                     uploadExtension: uploadExtension,
+//                                     data: data,
+//                                     delegate: delegate)
+//        self.uploadTasks.append(task)
+//        task.resume()
+//        return task
+//    }
 
     @discardableResult public func uploadTaskForFile(toPath path: SMBPath,
                                                      withName fileName: String,
                                                      uploadExtension: String? = nil,
                                                      fromURL url: URL,
                                                      delegate: SessionUploadTaskDelegate?) -> Result<SessionUploadTask, SessionUploadTask.SessionUploadError> {
-        let handle: FileHandle
-        do {
-            handle = try FileHandle(forReadingFrom: url)
-        } catch {
+        if !FileManager.default.fileExists(atPath: url.path) {
             return Result.failure(SessionUploadTask.SessionUploadError.fileNotFound)
         }
 
@@ -311,7 +308,7 @@ public class SMBSession {
                                      path: path,
                                      fileName: fileName,
                                      uploadExtension: uploadExtension,
-                                     data: handle.availableData,
+                                     fromURL: url,
                                      delegate: delegate)
         self.uploadTasks.append(task)
         task.resume()

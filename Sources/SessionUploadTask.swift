@@ -20,7 +20,7 @@ public class SessionUploadTask: SessionTask {
     var path: SMBPath
     var fileName: String
     var uploadExtension: String? // appending .upload to upload file name, then move
-    var data: Data
+    var fromURL: URL
     var file: SMBFile?
     public weak var delegate: SessionUploadTaskDelegate?
 
@@ -29,17 +29,27 @@ public class SessionUploadTask: SessionTask {
                 path: SMBPath,
                 fileName: String,
                 uploadExtension: String? = nil,
-                data: Data,
+                fromURL url: URL,
                 delegate: SessionUploadTaskDelegate? = nil) {
         self.path = path
         self.fileName = fileName
         self.uploadExtension = uploadExtension
-        self.data = data
+        self.fromURL = url
         self.delegate = delegate
         super.init(session: session, delegateQueue: delegateQueue)
     }
 
     override func performTaskWith(operation: BlockOperation) {
+        let chunkSize = 63488
+        
+        let fileHandle: FileHandle
+        do {
+            fileHandle = try FileHandle(forReadingFrom: self.fromURL)
+        } catch {
+            delegateError(.fileNotFound)
+            return
+        }
+        
         if operation.isCancelled {
             delegateError(.cancelled)
             return
@@ -85,16 +95,18 @@ public class SessionUploadTask: SessionTask {
             return
         }
 
-        var bytes = [UInt8](self.data)
-        let totalByteCount = bytes.count
+        // assign file size to totalByteCount
+        fileHandle.seekToEndOfFile()
+        let totalByteCount = fileHandle.offsetInFile
+        fileHandle.seek(toFileOffset: 0)
 
-        var uploadBufferLimit = min(bytes.count, 63488)
-        var bytesWritten = 0
-        var totalBytesWritten = 0
+        var uploadBufferLimit: UInt64 = min(totalByteCount, UInt64(chunkSize))
+        var bytesWritten: UInt64 = 0
+        var totalBytesWritten: UInt64 = 0
 
         // check if there is a file to resume upload on
         if let previousUpload = self.existingTempDestination(treeId: treeId) {
-            totalBytesWritten = Int(previousUpload.fileSize)
+            totalBytesWritten = previousUpload.fileSize
         }
 
         let fileOpenResult: Result<smb_fd, SMBSession.SMBSessionError>
@@ -132,34 +144,47 @@ public class SessionUploadTask: SessionTask {
             }
         }
 
+        var buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSize)
+
         repeat {
-            if totalByteCount - totalBytesWritten < uploadBufferLimit {
-                uploadBufferLimit = totalByteCount - totalBytesWritten
+            var remainingBytes = totalByteCount - totalBytesWritten
+            if remainingBytes < uploadBufferLimit {
+                uploadBufferLimit = remainingBytes
             }
 
-            let ptr: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer(mutating: bytes)
+            var lengthToRead: Int = min(Int(uploadBufferLimit), chunkSize)
+
+            autoreleasepool {
+                let dataBytes = fileHandle.readData(ofLength: lengthToRead)
+                buffer.initialize(from: dataBytes)
+            }
+
+            bytesWritten = UInt64(self.session.fileWrite(fileId: fileId, buffer: buffer, bufferSize: lengthToRead))
+
+            buffer.deinitialize(count: lengthToRead)
 
             if operation.isCancelled {
+                fileHandle.closeFile()
                 break
             }
-            bytesWritten = self.session.fileWrite(fileId: fileId, buffer: ptr+totalBytesWritten, bufferSize: uploadBufferLimit)
-            // bytesWritten == -1, console output is 'netbios_session_packet_recv: : Network is down'
             if bytesWritten < 0 {
                 fail()
                 self.delegateError(.uploadFailed)
-                bytes = []
+                fileHandle.closeFile()
                 break
             }
             self.delegateQueue.async {
-                self.delegate?.uploadTask(self, totalBytesSent: UInt64(totalBytesWritten), totalBytesExpected: UInt64(totalByteCount))
+                self.delegate?.uploadTask(self, totalBytesSent: totalBytesWritten, totalBytesExpected: totalByteCount)
             }
 
             totalBytesWritten += bytesWritten
         } while (totalBytesWritten < totalByteCount)
 
-        bytes = []
+        buffer.deinitialize(count: chunkSize)
+        buffer.deallocate(capacity: chunkSize)
 
         self.session.fileClose(fileId: fileId)
+        fileHandle.closeFile()
 
         if operation.isCancelled {
             return
