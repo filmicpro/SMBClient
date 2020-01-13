@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name = 'SMBClient'
-  s.version = '0.0.9'
+  s.version = '0.0.10'
   s.summary = 'SMBClient is simple SMB client for iOS apps. It allows connecting to SMB devices.'
   s.homepage = "https://github.com/filmicpro/SMBClient"
   s.license = { :type => 'MIT', :file => 'LICENSE' }
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.source = { :git => "https://github.com/filmicpro/SMBClient.git", :tag => "#{s.version}" }
   s.ios.deployment_target = '10.0'
   s.swift_version = '4.0'
-  s.source_files  = ["Sources/**/*.swift", "libdsm/**/*.h", "libdsm/**/*.modulemap"]
+  s.source_files  = ["Sources/**/*.swift", "libdsm/**/*.h"]
   s.xcconfig = {
     'HEADER_SEARCH_PATHS' => '$(PODS_TARGET_SRCROOT)/libdsm/include/bdsm',
     'SWIFT_INCLUDE_PATHS' => '$(PODS_TARGET_SRCROOT)/libdsm'
